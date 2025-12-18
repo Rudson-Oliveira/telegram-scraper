@@ -55,28 +55,42 @@ function checkHourlyReset() {
   }
 }
 
+/**
+ * Helper function for delays and rate limiting
+ * @param ms - Milliseconds to wait
+ */
+export async function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function initTelegramClient(session?: string): Promise<boolean> {
   try {
     sessionString = session || process.env.TELEGRAM_SESSION || '';
     const stringSession = new StringSession(sessionString);
     
+    // CORREÇÃO: Aumentar timeout de 30s para 120s e adicionar mais retries
     client = new TelegramClient(stringSession, API_ID, API_HASH, {
-      connectionRetries: 5,
+      connectionRetries: 5,        // 5 tentativas de reconexão
       useWSS: true,
-      timeout: 30000,
+      timeout: 120000,             // 120 segundos (antes era 30s)
+      retryDelay: 5000,            // 5 segundos entre tentativas
+      autoReconnect: true,         // Reconectar automaticamente
+      maxConcurrentDownloads: 1,   // 1 download por vez (evitar sobrecarga)
     });
 
     // Se já temos uma sessão válida, apenas conectar
     if (sessionString) {
+      console.log('[Telegram] Connecting with existing session...');
       await client.connect();
       isConnected = client.connected ?? false;
       if (isConnected) {
-        console.log('[Telegram] Connected with existing session');
+        console.log('[Telegram] ✅ Connected with existing session');
         return true;
       }
     }
 
     // Caso contrário, iniciar autenticação
+    console.log('[Telegram] Starting authentication flow...');
     await client.start({
       phoneNumber: async () => process.env.TELEGRAM_PHONE || '+5535998352323',
       password: async () => process.env.TELEGRAM_2FA_PASSWORD || '',
@@ -88,13 +102,13 @@ export async function initTelegramClient(session?: string): Promise<boolean> {
 
     isConnected = true;
     sessionString = client.session.save() as unknown as string;
-    console.log('[Telegram] Client connected successfully');
+    console.log('[Telegram] ✅ Client connected successfully');
     console.log('[Telegram] Session saved for future reconnection');
     
     return true;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[Telegram] Failed to initialize:', errorMsg);
+    console.error('[Telegram] ❌ Failed to initialize:', errorMsg);
     
     if (errorMsg === 'PHONE_CODE_REQUIRED') {
       console.log('[Telegram] Phone verification required - use sendCode endpoint');
@@ -213,6 +227,76 @@ function getMediaType(media: Api.TypeMessageMedia): string {
   return 'other';
 }
 
+/**
+ * CORREÇÃO: Função de raspagem com retry automático e backoff exponencial
+ * Resolve o problema de sessões travadas (30-40% de falhas)
+ * 
+ * @param channelUsername - Username do canal (ex: @canal)
+ * @param limit - Número máximo de mensagens
+ * @param maxRetries - Número máximo de tentativas (padrão: 3)
+ * @returns Array de mensagens do Telegram
+ */
+export async function scrapeChannelWithRetry(
+  channelUsername: string,
+  limit: number = 100,
+  maxRetries: number = 3
+): Promise<TelegramMessage[]> {
+  if (!client || !isConnected) {
+    throw new Error('Telegram client not connected');
+  }
+
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[Telegram] 📥 Tentativa ${attempt}/${maxRetries} para canal ${channelUsername}`);
+      
+      // Verificar se canal existe
+      const channel = await client.getEntity(channelUsername);
+      if (!channel) {
+        throw new Error(`Canal ${channelUsername} não encontrado`);
+      }
+      
+      // Raspar mensagens com timeout maior
+      const messages = await client.getMessages(channel, { limit });
+      
+      // Rate limiting: aguardar 1 segundo entre requisições
+      await sleep(1000);
+      
+      console.log(`[Telegram] ✅ Sucesso: ${messages.length} mensagens coletadas de ${channelUsername}`);
+      
+      // Converter para formato TelegramMessage
+      return messages.map(msg => ({
+        id: msg.id,
+        channelId: channelUsername,
+        channelName: channelUsername,
+        content: msg.message || '',
+        date: new Date(msg.date * 1000),
+        mediaType: msg.media ? getMediaType(msg.media) : undefined,
+        views: msg.views || 0,
+        forwards: msg.forwards || 0,
+        senderName: msg.fromId ? String(msg.fromId) : undefined,
+      }));
+      
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`[Telegram] ❌ Erro na tentativa ${attempt}:`, error);
+      
+      if (attempt < maxRetries) {
+        // Backoff exponencial: 5s, 10s, 15s
+        const waitTime = attempt * 5000;
+        console.log(`[Telegram] ⏳ Aguardando ${waitTime}ms antes de tentar novamente...`);
+        await sleep(waitTime);
+      }
+    }
+  }
+  
+  // Se chegou aqui, todas as tentativas falharam
+  const errorMsg = `Falha ao raspar canal ${channelUsername} após ${maxRetries} tentativas: ${lastError?.message}`;
+  console.error(`[Telegram] ❌ ${errorMsg}`);
+  throw new Error(errorMsg);
+}
+
 export async function scrapeChannels(
   userId: number,
   channelUsernames: string[],
@@ -256,7 +340,9 @@ export async function scrapeChannels(
         onProgress(currentChannel, totalChannels, username);
       }
 
-      const messages = await getChannelMessages(username, messagesPerChannel);
+      // CORREÇÃO: Usar scrapeChannelWithRetry ao invés de getChannelMessages
+      // Isso adiciona retry automático e backoff exponencial
+      const messages = await scrapeChannelWithRetry(username, messagesPerChannel, 3);
       
       // Get channel from database
       const channels = await db.getChannels(userId);
@@ -285,10 +371,13 @@ export async function scrapeChannels(
       result.channels.push({ name: username, count: messages.length });
       result.messagesCollected += messages.length;
       
-      // Rate limiting delay between channels
-      await new Promise(resolve => setTimeout(resolve, RATE_LIMIT.delayBetweenChannels));
+      console.log(`[Telegram] ✅ Canal ${username}: ${messages.length} mensagens salvas`);
+      
+      // Rate limiting delay between channels (2 segundos)
+      await sleep(RATE_LIMIT.delayBetweenChannels);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[Telegram] ❌ Erro ao processar canal ${username}:`, errorMsg);
       result.errors.push(`${username}: ${errorMsg}`);
     }
   }

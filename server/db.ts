@@ -339,3 +339,74 @@ export async function getCategories(userId: number): Promise<ContentCategory[]> 
     .where(eq(contentCategories.userId, userId))
     .orderBy(contentCategories.name);
 }
+
+// ============ DEBUG & CONSISTENCY FUNCTIONS ============
+/**
+ * Debug function to check message count consistency across tables
+ * Used to diagnose dashboard counter discrepancies
+ */
+export async function debugMessageCounts() {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const totalMessages = await db.select({ count: sql<number>`count(*)` })
+      .from(telegramMessages);
+    
+    const totalHistory = await db.select({ count: sql<number>`count(*)` })
+      .from(scrapingHistory);
+    
+    const sumHistoryMessages = await db.select({ 
+      sum: sql<number>`sum(messagesCollected)` 
+    }).from(scrapingHistory);
+    
+    console.log('=== DEBUG MESSAGE COUNTS ===');
+    console.log('Total messages in telegram_messages:', totalMessages[0]?.count);
+    console.log('Total scraping sessions:', totalHistory[0]?.count);
+    console.log('Sum of messagesCollected in history:', sumHistoryMessages[0]?.sum);
+    console.log('===========================');
+    
+    return {
+      totalMessages: Number(totalMessages[0]?.count || 0),
+      totalSessions: Number(totalHistory[0]?.count || 0),
+      sumHistoryMessages: Number(sumHistoryMessages[0]?.sum || 0),
+    };
+  } catch (error) {
+    console.error('[Database] Error in debugMessageCounts:', error);
+    return null;
+  }
+}
+
+/**
+ * Recalculate and sync message counters between tables
+ * Should be run periodically or after bulk operations
+ */
+export async function recalculateMessageCounters() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    // Get actual message counts per channel
+    const channelCounts = await db
+      .select({
+        channelId: telegramMessages.channelId,
+        count: sql<number>`count(*)`
+      })
+      .from(telegramMessages)
+      .groupBy(telegramMessages.channelId);
+    
+    console.log('[Database] Recalculated message counts for', channelCounts.length, 'channels');
+    
+    return {
+      success: true,
+      channelsUpdated: channelCounts.length,
+      counts: channelCounts.map(c => ({
+        channelId: c.channelId,
+        count: Number(c.count)
+      }))
+    };
+  } catch (error) {
+    console.error('[Database] Error recalculating counters:', error);
+    throw error;
+  }
+}

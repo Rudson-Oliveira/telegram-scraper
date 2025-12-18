@@ -755,6 +755,12 @@ export const appRouter = router({
   // Dashboard Stats
   dashboard: router({
     stats: protectedProcedure.query(async ({ ctx }) => {
+      // Debug: verificar contagens para diagnosticar inconsistências
+      const debug = await db.debugMessageCounts();
+      if (debug) {
+        console.log('[Dashboard] Stats debug:', debug);
+      }
+      
       // Use global stats to show all data regardless of userId
       const [globalChannels, globalMessageStats, userHistory] = await Promise.all([
         db.getGlobalChannelsCount(),
@@ -767,7 +773,13 @@ export const appRouter = router({
         activeChannels: globalChannels.active,
         ...globalMessageStats,
         recentHistory: userHistory,
+        debug, // Incluir informações de debug na resposta
       };
+    }),
+    
+    recalculateCounters: protectedProcedure.mutation(async ({ ctx }) => {
+      const result = await db.recalculateMessageCounters();
+      return result;
     }),
   }),
 
