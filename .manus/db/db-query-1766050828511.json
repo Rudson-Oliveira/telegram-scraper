@@ -1,0 +1,46 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "adapted_content"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "agents"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "api_keys"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "content_categories"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "integrations"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "scraping_history"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "scraping_workers"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "telegram_channels"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "telegram_credentials"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "telegram_messages"
+    },
+    {
+      "Tables_in_FgFuwHSp9rkJkcaPADwYhA": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_FgFuwHSp9rkJkcaPADwYhA\n__drizzle_migrations\nadapted_content\nagents\napi_keys\ncontent_categories\nintegrations\nscraping_history\nscraping_workers\ntelegram_channels\ntelegram_credentials\ntelegram_messages\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

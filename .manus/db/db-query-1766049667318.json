@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `agents` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `userId` int NOT NULL,\n  `integrationId` int NOT NULL,\n  `name` varchar(100) NOT NULL,\n  `role` enum('primary','backup','loadbalance') DEFAULT 'primary' NOT NULL,\n  `status` enum('online','busy','offline','error') DEFAULT 'offline' NOT NULL,\n  `currentLoad` int DEFAULT 0 NOT NULL,\n  `maxLoad` int DEFAULT 10 NOT NULL,\n  `lastActiveAt` timestamp,\n  `failureCount` int DEFAULT 0 NOT NULL,\n  `successCount` int DEFAULT 0 NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `agents_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute CREATE TABLE IF NOT EXISTS `agents` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `userId` int NOT NULL,\n  `integrationId` int NOT NULL,\n  `name` varchar(100) NOT NULL,\n  `role` enum('primary','backup','loadbalance') DEFAULT 'primary' NOT NULL,\n  `status` enum('online','busy','offline','error') DEFAULT 'offline' NOT NULL,\n  `currentLoad` int DEFAULT 0 NOT NULL,\n  `maxLoad` int DEFAULT 10 NOT NULL,\n  `lastActiveAt` timestamp,\n  `failureCount` int DEFAULT 0 NOT NULL,\n  `successCount` int DEFAULT 0 NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT `agents_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 214
+}

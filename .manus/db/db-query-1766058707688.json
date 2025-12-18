@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE telegram_messages MODIFY COLUMN aiClassification ENUM('prompt', 'ferramenta', 'tutorial', 'noticia', 'discussao', 'recurso', 'codigo', 'imagem_ia', 'video_ia', 'audio_ia', 'workflow', 'healthcare', 'outro');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute ALTER TABLE telegram_messages MODIFY COLUMN aiClassification ENUM('prompt', 'ferramenta', 'tutorial', 'noticia', 'discussao', 'recurso', 'codigo', 'imagem_ia', 'video_ia', 'audio_ia', 'workflow', 'healthcare', 'outro');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 633
+}

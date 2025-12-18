@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, channelName FROM telegram_channels LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT id, channelName FROM telegram_channels LIMIT 5",
+  "rows": [
+    {
+      "id": "1",
+      "channelName": "INEMA.IA"
+    },
+    {
+      "id": "2",
+      "channelName": "INEMA.LLMs"
+    },
+    {
+      "id": "3",
+      "channelName": "INEMA.AGENTES"
+    },
+    {
+      "id": "4",
+      "channelName": "INEMA.MUSICAL"
+    },
+    {
+      "id": "5",
+      "channelName": "INEMA.MKT"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tchannelName\n1\tINEMA.IA\n2\tINEMA.LLMs\n3\tINEMA.AGENTES\n4\tINEMA.MUSICAL\n5\tINEMA.MKT\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

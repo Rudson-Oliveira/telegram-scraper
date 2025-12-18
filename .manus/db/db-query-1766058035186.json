@@ -1,0 +1,21 @@
+{
+  "query": "SELECT * FROM api_keys LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT * FROM api_keys LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "userId": "1",
+      "keyName": "N8N Integration",
+      "apiKey": "tgs_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4",
+      "permissions": "[\"read\", \"write\"]",
+      "isActive": "1",
+      "lastUsedAt": "2025-12-18 08:05:59",
+      "expiresAt": "NULL",
+      "createdAt": "2025-12-17 03:51:51"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tkeyName\tapiKey\tpermissions\tisActive\tlastUsedAt\texpiresAt\tcreatedAt\n1\t1\tN8N Integration\ttgs_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4\t[\"read\", \"write\"]\t1\t2025-12-18 08:05:59\tNULL\t2025-12-17 03:51:51\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO scraping_history (userId, channelId, messagesCollected, status, startedAt, completedAt) VALUES (1, 1, 10, 'completed', NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute INSERT INTO scraping_history (userId, channelId, messagesCollected, status, startedAt, completedAt) VALUES (1, 1, 10, 'completed', NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 74
+}

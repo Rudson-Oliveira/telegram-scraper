@@ -1,0 +1,401 @@
+{
+  "name": "Telegram Scraper - Ferramentas IA → Notion",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 2
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Agendamento (2h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.TELEGRAM_SCRAPER_URL}}/api/webhooks/messages",
+        "authentication": "none",
+        "options": {}
+      },
+      "id": "http-get-messages",
+      "name": "Buscar Mensagens",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Detectar ferramentas de IA nas mensagens\nconst items = $input.all();\nconst tools = [];\nconst processedUrls = new Set();\n\n// Padrões para detectar ferramentas de IA\nconst toolPatterns = [\n  // Domínios conhecidos de ferramentas IA\n  /(?:https?:\\/\\/)?(?:www\\.)?([a-zA-Z0-9-]+\\.(?:ai|io|app|co|com|dev|tools))\\b/gi,\n  // Menções explícitas de ferramentas\n  /(?:ferramenta|tool|app|plataforma|site)[:\\s]+([A-Za-z0-9]+(?:\\.[a-z]+)?)/gi,\n  // Links diretos\n  /(https?:\\/\\/[^\\s<>\"]+)/gi\n];\n\n// Categorias de ferramentas IA\nconst categories = {\n  'llm': ['gpt', 'claude', 'gemini', 'llama', 'mistral', 'perplexity', 'copilot', 'chatgpt', 'anthropic', 'openai'],\n  'imagem': ['midjourney', 'dall-e', 'dalle', 'stable diffusion', 'leonardo', 'ideogram', 'flux', 'runway', 'firefly', 'canva ai', 'remove.bg', 'photoroom'],\n  'video': ['heygen', 'd-id', 'synthesia', 'runway', 'pika', 'luma', 'kling', 'sora', 'invideo'],\n  'audio': ['suno', 'udio', 'elevenlabs', 'murf', 'descript', 'whisper', 'speechify'],\n  'automacao': ['n8n', 'make', 'zapier', 'activepieces', 'pipedream', 'bardeen'],\n  'agentes': ['crewai', 'autogpt', 'agentgpt', 'babyagi', 'langchain', 'autogen', 'taskweaver'],\n  'codigo': ['cursor', 'github copilot', 'codeium', 'tabnine', 'replit', 'v0', 'bolt', 'lovable'],\n  'pesquisa': ['perplexity', 'you.com', 'phind', 'consensus', 'elicit', 'scite'],\n  'produtividade': ['notion ai', 'mem', 'otter', 'fireflies', 'tldv', 'grain', 'fathom'],\n  'design': ['figma ai', 'framer', 'relume', 'uizard', 'galileo', 'magician']\n};\n\nfunction detectCategory(text) {\n  const textLower = text.toLowerCase();\n  for (const [category, keywords] of Object.entries(categories)) {\n    for (const keyword of keywords) {\n      if (textLower.includes(keyword)) {\n        return category;\n      }\n    }\n  }\n  return 'outros';\n}\n\nfunction extractToolInfo(content, channelName) {\n  const foundTools = [];\n  \n  // Extrair URLs\n  const urlRegex = /(https?:\\/\\/[^\\s<>\"]+)/gi;\n  const urls = content.match(urlRegex) || [];\n  \n  for (const url of urls) {\n    // Limpar URL\n    const cleanUrl = url.replace(/[.,;:!?)]+$/, '');\n    \n    // Evitar duplicatas\n    if (processedUrls.has(cleanUrl)) continue;\n    \n    // Filtrar URLs relevantes (domínios de ferramentas)\n    const aiDomains = ['.ai', '.io', '.app', '.tools', '.dev', 'openai', 'anthropic', 'huggingface', 'replicate', 'stability'];\n    const isAiTool = aiDomains.some(domain => cleanUrl.toLowerCase().includes(domain));\n    \n    if (isAiTool || content.toLowerCase().includes('ferramenta') || content.toLowerCase().includes('tool')) {\n      processedUrls.add(cleanUrl);\n      \n      // Extrair nome da ferramenta do URL ou contexto\n      let toolName = '';\n      try {\n        const urlObj = new URL(cleanUrl);\n        toolName = urlObj.hostname.replace('www.', '').split('.')[0];\n        toolName = toolName.charAt(0).toUpperCase() + toolName.slice(1);\n      } catch (e) {\n        toolName = cleanUrl.substring(0, 30);\n      }\n      \n      // Extrair descrição do contexto\n      const lines = content.split('\\n');\n      let description = '';\n      for (const line of lines) {\n        if (line.includes(cleanUrl) || line.length > 20) {\n          description = line.replace(urlRegex, '').trim().substring(0, 200);\n          if (description) break;\n        }\n      }\n      \n      const category = detectCategory(content);\n      \n      foundTools.push({\n        name: toolName,\n        url: cleanUrl,\n        description: description || `Ferramenta de ${category} encontrada no canal ${channelName}`,\n        category: category,\n        source: channelName,\n        discoveredAt: new Date().toISOString()\n      });\n    }\n  }\n  \n  return foundTools;\n}\n\n// Processar todas as mensagens\nfor (const item of items) {\n  const content = item.json.content || '';\n  const channelName = item.json.channelName || 'INEMA';\n  \n  const foundTools = extractToolInfo(content, channelName);\n  tools.push(...foundTools);\n}\n\n// Remover duplicatas por URL\nconst uniqueTools = [];\nconst seenUrls = new Set();\nfor (const tool of tools) {\n  if (!seenUrls.has(tool.url)) {\n    seenUrls.add(tool.url);\n    uniqueTools.push({ json: tool });\n  }\n}\n\nreturn uniqueTools.length > 0 ? uniqueTools : [{ json: { skip: true, message: 'Nenhuma nova ferramenta encontrada' } }];"
+      },
+      "id": "detect-tools",
+      "name": "Detectar Ferramentas IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-valid-tools",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-valid",
+      "name": "Filtrar Válidos",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "value": "={{$env.NOTION_TOOLS_DATABASE_ID}}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nome|title",
+              "title": "={{ $json.name }}"
+            },
+            {
+              "key": "URL|url",
+              "urlValue": "={{ $json.url }}"
+            },
+            {
+              "key": "Descrição|rich_text",
+              "textContent": "={{ $json.description }}"
+            },
+            {
+              "key": "Categoria|select",
+              "selectValue": "={{ $json.category }}"
+            },
+            {
+              "key": "Fonte|select",
+              "selectValue": "={{ $json.source }}"
+            },
+            {
+              "key": "Data Descoberta|date",
+              "date": "={{ $json.discoveredAt }}"
+            },
+            {
+              "key": "Status|select",
+              "selectValue": "Para Testar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "notion-create",
+      "name": "Adicionar ao Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [1120, 300],
+      "credentials": {
+        "notionApi": {
+          "id": "notion-api",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-error",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-success",
+      "name": "Verificar Sucesso",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "aggregate-results",
+      "name": "Agregar Resultados",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gerar resumo das ferramentas adicionadas\nconst items = $input.all();\nconst allData = items[0]?.json?.data || [];\n\nconst summary = {\n  total: allData.length,\n  byCategory: {},\n  tools: allData.map(item => ({\n    name: item.name,\n    category: item.category,\n    url: item.url\n  }))\n};\n\n// Contar por categoria\nfor (const item of allData) {\n  const cat = item.category || 'outros';\n  summary.byCategory[cat] = (summary.byCategory[cat] || 0) + 1;\n}\n\n// Gerar HTML para e-mail\nlet toolsList = '';\nfor (const tool of summary.tools) {\n  toolsList += `<tr><td style=\"padding:8px;border-bottom:1px solid #eee;\"><strong>${tool.name}</strong></td><td style=\"padding:8px;border-bottom:1px solid #eee;\">${tool.category}</td><td style=\"padding:8px;border-bottom:1px solid #eee;\"><a href=\"${tool.url}\" style=\"color:#0088cc;\">${tool.url}</a></td></tr>`;\n}\n\nconst categorySummary = Object.entries(summary.byCategory)\n  .map(([cat, count]) => `<li><strong>${cat}</strong>: ${count}</li>`)\n  .join('');\n\nconst emailHtml = `\n<div style=\"font-family:Arial,sans-serif;max-width:800px;margin:0 auto;\">\n  <div style=\"background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:30px;border-radius:10px 10px 0 0;\">\n    <h1 style=\"color:white;margin:0;\">\ud83e\udd16 Novas Ferramentas de IA Descobertas!</h1>\n    <p style=\"color:rgba(255,255,255,0.9);margin:10px 0 0;\">Telegram Scraper INEMA VIP</p>\n  </div>\n  <div style=\"background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px;\">\n    <div style=\"background:white;padding:20px;border-radius:8px;margin-bottom:20px;box-shadow:0 2px 4px rgba(0,0,0,0.1);\">\n      <h2 style=\"color:#333;margin-top:0;\">\ud83d\udcca Resumo</h2>\n      <p style=\"font-size:24px;color:#667eea;margin:10px 0;\"><strong>${summary.total}</strong> ferramentas encontradas</p>\n      <h3 style=\"color:#666;\">Por Categoria:</h3>\n      <ul style=\"color:#666;\">${categorySummary}</ul>\n    </div>\n    <div style=\"background:white;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);\">\n      <h2 style=\"color:#333;margin-top:0;\">\ud83d\udee0\ufe0f Ferramentas Descobertas</h2>\n      <table style=\"width:100%;border-collapse:collapse;\">\n        <thead>\n          <tr style=\"background:#f5f5f5;\">\n            <th style=\"padding:12px;text-align:left;border-bottom:2px solid #ddd;\">Nome</th>\n            <th style=\"padding:12px;text-align:left;border-bottom:2px solid #ddd;\">Categoria</th>\n            <th style=\"padding:12px;text-align:left;border-bottom:2px solid #ddd;\">URL</th>\n          </tr>\n        </thead>\n        <tbody>${toolsList}</tbody>\n      </table>\n    </div>\n    <div style=\"text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid #eee;\">\n      <p style=\"color:#999;font-size:12px;\">\n        Enviado automaticamente pelo Telegram Scraper<br>\n        Desenvolvido por Manus AI para Rudson Oliveira\n      </p>\n    </div>\n  </div>\n</div>`;\n\nconst textMessage = `\ud83e\udd16 Ferramentas IA Descobertas: ${summary.total}\\n\\n` +\n  Object.entries(summary.byCategory)\n    .map(([cat, count]) => `\u2022 ${cat}: ${count}`)\n    .join('\\n') +\n  '\\n\\nFerramentas:\\n' +\n  summary.tools.map(t => `- ${t.name} (${t.category}): ${t.url}`).join('\\n');\n\nreturn [{\n  json: {\n    summary,\n    message: textMessage,\n    emailHtml,\n    emailSubject: `\ud83e\udd16 ${summary.total} Novas Ferramentas de IA Descobertas - INEMA VIP`,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "generate-summary",
+      "name": "Gerar Resumo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1780, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-has-tools",
+              "leftValue": "={{ $json.summary.total }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-has-tools",
+      "name": "Tem Ferramentas?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [2000, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{$env.EMAIL_FROM || 'telegram-scraper@manus.ai'}}",
+        "toEmail": "={{$env.EMAIL_TO || 'rudson@example.com'}}",
+        "subject": "={{ $json.emailSubject }}",
+        "emailType": "html",
+        "html": "={{ $json.emailHtml }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "send-email",
+      "name": "Enviar E-mail",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [2220, 300],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "=E-mail enviado com {{ $json.summary.total }} ferramentas"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "email-sent-status",
+      "name": "Status E-mail",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [2440, 300]
+    },
+    {
+      "parameters": {
+        "content": "## Telegram Scraper → Notion (Ferramentas IA)\\n\\n### Configuração do Notion:\\n\\n1. **Crie uma Integration no Notion:**\\n   - Acesse: notion.so/my-integrations\\n   - Clique em \"New integration\"\\n   - Copie o \"Internal Integration Token\"\\n\\n2. **Crie um Database no Notion com estas propriedades:**\\n   - Nome (Title)\\n   - URL (URL)\\n   - Descrição (Text)\\n   - Categoria (Select): llm, imagem, video, audio, automacao, agentes, codigo, pesquisa, produtividade, design, outros\\n   - Fonte (Select): nomes dos canais INEMA\\n   - Data Descoberta (Date)\\n   - Status (Select): Para Testar, Testando, Aprovado, Descartado\\n\\n3. **Conecte o Database à Integration:**\\n   - Abra o database no Notion\\n   - Clique em ••• → Connections\\n   - Adicione sua integration\\n\\n4. **Configure no N8N:**\\n   - Credentials: Notion API com seu token\\n   - Variável: NOTION_TOOLS_DATABASE_ID\\n\\n### Categorias detectadas automaticamente:\\n- LLM, Imagem, Vídeo, Áudio\\n- Automação, Agentes, Código\\n- Pesquisa, Produtividade, Design",
+        "height": 580,
+        "width": 380
+      },
+      "id": "sticky-note",
+      "name": "Instruções Notion",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "content": "## Fluxo do Workflow\\n\\n1. **Agendamento**: Executa a cada 2 horas\\n2. **Buscar Mensagens**: Coleta do Telegram Scraper\\n3. **Detectar Ferramentas**: Analisa URLs e contexto\\n4. **Filtrar Válidos**: Remove itens vazios\\n5. **Adicionar ao Notion**: Cria página no database\\n6. **Gerar Resumo**: Estatísticas da execução\\n7. **Enviar E-mail**: Notificação com resumo\\n\\n### Configuração de E-mail:\\n- Variável: EMAIL_FROM (remetente)\\n- Variável: EMAIL_TO (destinatário)\\n- Credencial SMTP configurada",
+        "height": 320,
+        "width": 300
+      },
+      "id": "sticky-note-2",
+      "name": "Fluxo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [640, 480]
+    }
+  ],
+  "connections": {
+    "Agendamento (2h)": {
+      "main": [
+        [
+          {
+            "node": "Buscar Mensagens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Mensagens": {
+      "main": [
+        [
+          {
+            "node": "Detectar Ferramentas IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detectar Ferramentas IA": {
+      "main": [
+        [
+          {
+            "node": "Filtrar Válidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Válidos": {
+      "main": [
+        [
+          {
+            "node": "Adicionar ao Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adicionar ao Notion": {
+      "main": [
+        [
+          {
+            "node": "Verificar Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Sucesso": {
+      "main": [
+        [
+          {
+            "node": "Agregar Resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A    "Gerar Resumo": {
+      "main": [
+        [
+          {
+            "node": "Tem Ferramentas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Ferramentas?": {
+      "main": [
+        [
+          {
+            "node": "Enviar E-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar E-mail": {
+      "main": [
+        [
+          {
+            "node": "Status E-mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "telegram",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    },
+    {
+      "name": "notion",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    },
+    {
+      "name": "ferramentas-ia",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    },
+    {
+      "name": "inema",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-17T00:00:00.000Z",
+  "versionId": "1"
+}

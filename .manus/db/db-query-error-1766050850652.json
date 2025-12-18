@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO telegram_channels (userId, channelId, channelName, channelUsername, isActive, category, createdAt, updatedAt) VALUES\n(1, 'health_ai_news', 'Health AI News', 'healthainews', 1, 'healthcare', NOW(), NOW()),\n(1, 'medical_tech', 'Medical Technology', 'medicaltech', 1, 'healthcare', NOW(), NOW()),\n(1, 'ai_healthcare', 'AI in Healthcare', 'aihealthcare', 1, 'healthcare', NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute INSERT INTO telegram_channels (userId, channelId, channelName, channelUsername, isActive, category, createdAt, updatedAt) VALUES\n(1, 'health_ai_news', 'Health AI News', 'healthainews', 1, 'healthcare', NOW(), NOW()),\n(1, 'medical_tech', 'Medical Technology', 'medicaltech', 1, 'healthcare', NOW(), NOW()),\n(1, 'ai_healthcare', 'AI in Healthcare', 'aihealthcare', 1, 'healthcare', NOW(), NOW());",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'category' in 'field list'"
+  ]
+}

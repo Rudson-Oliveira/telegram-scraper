@@ -1,0 +1,324 @@
+{
+  "name": "Telegram Scraper - Coleta de Prompts INEMA",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Agendamento (1h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.TELEGRAM_SCRAPER_URL}}/api/webhooks/messages?type=prompt",
+        "authentication": "none",
+        "options": {}
+      },
+      "id": "http-get-prompts",
+      "name": "Buscar Prompts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-has-content",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-valid",
+      "name": "Filtrar Válidos",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Processar e categorizar prompts\nconst items = $input.all();\nconst processedItems = [];\n\nfor (const item of items) {\n  const content = item.json.content || '';\n  const channelName = item.json.channelName || 'Desconhecido';\n  \n  // Detectar categoria do prompt\n  let category = 'geral';\n  const contentLower = content.toLowerCase();\n  \n  if (contentLower.includes('gpt') || contentLower.includes('claude') || contentLower.includes('gemini')) {\n    category = 'llm';\n  } else if (contentLower.includes('midjourney') || contentLower.includes('dall-e') || contentLower.includes('stable diffusion') || contentLower.includes('imagem')) {\n    category = 'imagem';\n  } else if (contentLower.includes('n8n') || contentLower.includes('make') || contentLower.includes('automação') || contentLower.includes('workflow')) {\n    category = 'automacao';\n  } else if (contentLower.includes('agente') || contentLower.includes('agent') || contentLower.includes('crew')) {\n    category = 'agentes';\n  } else if (contentLower.includes('suno') || contentLower.includes('udio') || contentLower.includes('música')) {\n    category = 'audio';\n  } else if (contentLower.includes('heygen') || contentLower.includes('d-id') || contentLower.includes('avatar') || contentLower.includes('vídeo')) {\n    category = 'video';\n  }\n  \n  // Extrair título (primeira linha ou primeiros 50 caracteres)\n  const lines = content.split('\\n').filter(l => l.trim());\n  const title = lines[0]?.substring(0, 80) || 'Sem título';\n  \n  // Formatar para Markdown (Obsidian)\n  const markdown = `---\\ntitle: \"${title.replace(/\"/g, \"'\")}\"\\ncategory: ${category}\\nchannel: ${channelName}\\ndate: ${new Date().toISOString().split('T')[0]}\\ntags:\\n  - prompt\\n  - ${category}\\n  - inema\\n---\\n\\n# ${title}\\n\\n**Canal:** ${channelName}\\n**Categoria:** ${category}\\n\\n---\\n\\n${content}\\n`;\n  \n  processedItems.push({\n    json: {\n      ...item.json,\n      category,\n      title,\n      markdown,\n      filename: `prompt-${category}-${Date.now()}.md`\n    }\n  });\n}\n\nreturn processedItems;"
+      },
+      "id": "process-prompts",
+      "name": "Processar Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-llm",
+              "leftValue": "={{ $json.category }}",
+              "rightValue": "llm",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-llm",
+      "name": "Filtrar LLM",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1120, 160]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-imagem",
+              "leftValue": "={{ $json.category }}",
+              "rightValue": "imagem",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-imagem",
+      "name": "Filtrar Imagem",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-automacao",
+              "leftValue": "={{ $json.category }}",
+              "rightValue": "automacao",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-automacao",
+      "name": "Filtrar Automação",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [1120, 440]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/prompts/llm/{{ $json.filename }}",
+        "fileContent": "={{ $json.markdown }}",
+        "options": {}
+      },
+      "id": "save-llm",
+      "name": "Salvar LLM",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [1340, 160]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/prompts/imagem/{{ $json.filename }}",
+        "fileContent": "={{ $json.markdown }}",
+        "options": {}
+      },
+      "id": "save-imagem",
+      "name": "Salvar Imagem",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/prompts/automacao/{{ $json.filename }}",
+        "fileContent": "={{ $json.markdown }}",
+        "options": {}
+      },
+      "id": "save-automacao",
+      "name": "Salvar Automação",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [1340, 440]
+    },
+    {
+      "parameters": {
+        "content": "## Telegram Scraper - Workflow de Prompts INEMA\\n\\n### Configuração:\\n1. Defina a variável de ambiente `TELEGRAM_SCRAPER_URL` com a URL do seu Telegram Scraper\\n2. Ajuste o intervalo de execução conforme necessário\\n3. Configure o destino dos arquivos (pasta local ou integração com Obsidian)\\n\\n### Categorias detectadas:\\n- **llm**: Prompts para GPT, Claude, Gemini\\n- **imagem**: Prompts para Midjourney, DALL-E, Stable Diffusion\\n- **automacao**: Workflows N8N, Make\\n- **agentes**: CrewAI, AutoGPT, agentes autônomos\\n- **audio**: Suno, Udio, música com IA\\n- **video**: HeyGen, D-ID, avatares\\n\\n### Saída:\\nArquivos Markdown formatados para Obsidian com frontmatter YAML",
+        "height": 380,
+        "width": 320
+      },
+      "id": "sticky-note",
+      "name": "Instruções",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 480]
+    }
+  ],
+  "connections": {
+    "Agendamento (1h)": {
+      "main": [
+        [
+          {
+            "node": "Buscar Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Prompts": {
+      "main": [
+        [
+          {
+            "node": "Filtrar Válidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Válidos": {
+      "main": [
+        [
+          {
+            "node": "Processar Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar Prompts": {
+      "main": [
+        [
+          {
+            "node": "Filtrar LLM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filtrar Imagem",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filtrar Automação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar LLM": {
+      "main": [
+        [
+          {
+            "node": "Salvar LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Imagem": {
+      "main": [
+        [
+          {
+            "node": "Salvar Imagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Automação": {
+      "main": [
+        [
+          {
+            "node": "Salvar Automação",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "telegram",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    },
+    {
+      "name": "prompts",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    },
+    {
+      "name": "inema",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-17T00:00:00.000Z",
+  "versionId": "1"
+}

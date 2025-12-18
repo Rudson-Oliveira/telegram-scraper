@@ -1,0 +1,160 @@
+{
+  "query": "SELECT id, channelName, channelUsername, isActive FROM telegram_channels ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT id, channelName, channelUsername, isActive FROM telegram_channels ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "channelName": "INEMA.IA",
+      "channelUsername": "INEMA_IA",
+      "isActive": "1"
+    },
+    {
+      "id": "2",
+      "channelName": "INEMA.LLMs",
+      "channelUsername": "INEMA_LLMs",
+      "isActive": "1"
+    },
+    {
+      "id": "3",
+      "channelName": "INEMA.AGENTES",
+      "channelUsername": "INEMA_AGENTES",
+      "isActive": "1"
+    },
+    {
+      "id": "4",
+      "channelName": "INEMA.MUSICAL",
+      "channelUsername": "INEMA_MUSICAL",
+      "isActive": "1"
+    },
+    {
+      "id": "5",
+      "channelName": "INEMA.MKT",
+      "channelUsername": "INEMA_MKT",
+      "isActive": "1"
+    },
+    {
+      "id": "6",
+      "channelName": "INEMA.Educ",
+      "channelUsername": "INEMA_Educ",
+      "isActive": "1"
+    },
+    {
+      "id": "7",
+      "channelName": "RUDSON PROMPT",
+      "channelUsername": "RUDSON_PROMPT",
+      "isActive": "1"
+    },
+    {
+      "id": "8",
+      "channelName": "INEMA.VIP",
+      "channelUsername": "+WfQSB6Ndr35iZWRh",
+      "isActive": "1"
+    },
+    {
+      "id": "9",
+      "channelName": "INEMA.FTD",
+      "channelUsername": "INEMA_FTD",
+      "isActive": "1"
+    },
+    {
+      "id": "10",
+      "channelName": "AUTOMACAO RUDSON",
+      "channelUsername": "AUTOMACAO_RUDSON",
+      "isActive": "1"
+    },
+    {
+      "id": "11",
+      "channelName": "INEMA.DEV",
+      "channelUsername": "INEMA_DEV",
+      "isActive": "1"
+    },
+    {
+      "id": "12",
+      "channelName": "INEMA.INFRA",
+      "channelUsername": "INEMA_INFRA",
+      "isActive": "1"
+    },
+    {
+      "id": "13",
+      "channelName": "INEMA.TOOLS",
+      "channelUsername": "INEMA_TOOLS",
+      "isActive": "1"
+    },
+    {
+      "id": "14",
+      "channelName": "Rudson ESOTERISMO",
+      "channelUsername": "RUDSON_ESOTERISMO",
+      "isActive": "1"
+    },
+    {
+      "id": "15",
+      "channelName": "INEMA.N8N",
+      "channelUsername": "INEMA_N8N",
+      "isActive": "1"
+    },
+    {
+      "id": "16",
+      "channelName": "INEMA.IMAGENS",
+      "channelUsername": "INEMA_IMAGENS",
+      "isActive": "1"
+    },
+    {
+      "id": "17",
+      "channelName": "INEMA.AVATARES",
+      "channelUsername": "INEMA_AVATARES",
+      "isActive": "1"
+    },
+    {
+      "id": "18",
+      "channelName": "INEMA.CPA",
+      "channelUsername": "INEMA_CPA",
+      "isActive": "1"
+    },
+    {
+      "id": "19",
+      "channelName": "INEMA.TIA",
+      "channelUsername": "INEMA_TIA",
+      "isActive": "1"
+    },
+    {
+      "id": "20",
+      "channelName": "INEMA.ADULTO",
+      "channelUsername": "INEMA_ADULTO",
+      "isActive": "1"
+    },
+    {
+      "id": "21",
+      "channelName": "INEMA.Make",
+      "channelUsername": "INEMA_Make",
+      "isActive": "1"
+    },
+    {
+      "id": "22",
+      "channelName": "INEMA.VISION",
+      "channelUsername": "INEMA_VISION",
+      "isActive": "1"
+    },
+    {
+      "id": "23",
+      "channelName": "INEMA.Discussao",
+      "channelUsername": "INEMA_Discussao",
+      "isActive": "1"
+    },
+    {
+      "id": "24",
+      "channelName": "ESTUDOS RUDSON",
+      "channelUsername": "ESTUDOS_RUDSON",
+      "isActive": "1"
+    },
+    {
+      "id": "30001",
+      "channelName": "IA e Saúde Brasil",
+      "channelUsername": "@iasaudeoficial",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tchannelName\tchannelUsername\tisActive\n1\tINEMA.IA\tINEMA_IA\t1\n2\tINEMA.LLMs\tINEMA_LLMs\t1\n3\tINEMA.AGENTES\tINEMA_AGENTES\t1\n4\tINEMA.MUSICAL\tINEMA_MUSICAL\t1\n5\tINEMA.MKT\tINEMA_MKT\t1\n6\tINEMA.Educ\tINEMA_Educ\t1\n7\tRUDSON PROMPT\tRUDSON_PROMPT\t1\n8\tINEMA.VIP\t+WfQSB6Ndr35iZWRh\t1\n9\tINEMA.FTD\tINEMA_FTD\t1\n10\tAUTOMACAO RUDSON\tAUTOMACAO_RUDSON\t1\n11\tINEMA.DEV\tINEMA_DEV\t1\n12\tINEMA.INFRA\tINEMA_INFRA\t1\n13\tINEMA.TOOLS\tINEMA_TOOLS\t1\n14\tRudson ESOTERISMO\tRUDSON_ESOTERISMO\t1\n15\tINEMA.N8N\tINEMA_N8N\t1\n16\tINEMA.IMAGENS\tINEMA_IMAGENS\t1\n17\tINEMA.AVATARES\tINEMA_AVATARES\t1\n18\tINEMA.CPA\tINEMA_CPA\t1\n19\tINEMA.TIA\tINEMA_TIA\t1\n20\tINEMA.ADULTO\tINEMA_ADULTO\t1\n21\tINEMA.Make\tINEMA_Make\t1\n22\tINEMA.VISION\tINEMA_VISION\t1\n23\tINEMA.Discussao\tINEMA_Discussao\t1\n24\tESTUDOS RUDSON\tESTUDOS_RUDSON\t1\n30001\tIA e Saúde Brasil\t@iasaudeoficial\t1\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

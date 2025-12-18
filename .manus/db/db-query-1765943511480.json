@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO api_keys (userId, keyName, apiKey, permissions, isActive, createdAt) \nVALUES (1, 'N8N Integration', 'tgs_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4', '[\"read\",\"write\"]', 1, NOW())",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute INSERT INTO api_keys (userId, keyName, apiKey, permissions, isActive, createdAt) \nVALUES (1, 'N8N Integration', 'tgs_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4', '[\"read\",\"write\"]', 1, NOW())",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 64
+}

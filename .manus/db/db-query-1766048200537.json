@@ -1,0 +1,120 @@
+{
+  "query": "SELECT \n  id,\n  adaptedTitle,\n  adaptedDescription,\n  hospitalContext,\n  usabilityScore,\n  complexityScore,\n  roiPotential,\n  implementationTime,\n  targetDepartments\nFROM adapted_content \nORDER BY usabilityScore DESC, roiPotential DESC \nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT \n  id,\n  adaptedTitle,\n  adaptedDescription,\n  hospitalContext,\n  usabilityScore,\n  complexityScore,\n  roiPotential,\n  implementationTime,\n  targetDepartments\nFROM adapted_content \nORDER BY usabilityScore DESC, roiPotential DESC \nLIMIT 10;",
+  "rows": [
+    {
+      "id": "35",
+      "adaptedTitle": "Análise de Contratos Médicos com IA",
+      "adaptedDescription": "Multi-agente para extração, análise de riscos e sugestões.",
+      "hospitalContext": "Jurídico",
+      "usabilityScore": "5",
+      "complexityScore": "5",
+      "roiPotential": "30000.00",
+      "implementationTime": "1 mês",
+      "targetDepartments": "[\"Jurídico\", \"Compras\"]"
+    },
+    {
+      "id": "34",
+      "adaptedTitle": "Agente Virtual Hospitalar 24/7",
+      "adaptedDescription": "Chatbot para dúvidas, agendamentos e escalação.",
+      "hospitalContext": "Central de Atendimento",
+      "usabilityScore": "5",
+      "complexityScore": "3",
+      "roiPotential": "25000.00",
+      "implementationTime": "2 semanas",
+      "targetDepartments": "[\"Atendimento\", \"TI\"]"
+    },
+    {
+      "id": "33",
+      "adaptedTitle": "Integração WhatsApp + Prontuário",
+      "adaptedDescription": "Consulta prontuário e responde automaticamente ao paciente.",
+      "hospitalContext": "Atendimento",
+      "usabilityScore": "5",
+      "complexityScore": "4",
+      "roiPotential": "20000.00",
+      "implementationTime": "3 semanas",
+      "targetDepartments": "[\"TI\", \"Atendimento\"]"
+    },
+    {
+      "id": "31",
+      "adaptedTitle": "Bot de Triagem de Pacientes com IA",
+      "adaptedDescription": "Sistema automatizado para triagem inicial de pacientes via WhatsApp. Coleta sintomas, classifica urgência e direciona para especialidade.",
+      "hospitalContext": "Emergência",
+      "usabilityScore": "5",
+      "complexityScore": "3",
+      "roiPotential": "15000.00",
+      "implementationTime": "2 semanas",
+      "targetDepartments": "[\"Emergência\", \"Enfermagem\", \"TI\"]"
+    },
+    {
+      "id": "32",
+      "adaptedTitle": "Automação de Relatórios de Ocupação",
+      "adaptedDescription": "Gera relatórios diários de ocupação de leitos e previsão de demanda.",
+      "hospitalContext": "Gestão de Leitos",
+      "usabilityScore": "5",
+      "complexityScore": "2",
+      "roiPotential": "8000.00",
+      "implementationTime": "1 semana",
+      "targetDepartments": "[\"Administração\", \"UTI\"]"
+    },
+    {
+      "id": "38",
+      "adaptedTitle": "Processamento de Laudos Médicos",
+      "adaptedDescription": "OCR + resumo IA + anexo ao prontuário.",
+      "hospitalContext": "Laboratório",
+      "usabilityScore": "4",
+      "complexityScore": "4",
+      "roiPotential": "12000.00",
+      "implementationTime": "3 semanas",
+      "targetDepartments": "[\"Laboratório\", \"TI\"]"
+    },
+    {
+      "id": "39",
+      "adaptedTitle": "Recrutamento Hospitalar com IA",
+      "adaptedDescription": "Análise de CVs, verificação CRM/COREN, agendamento.",
+      "hospitalContext": "RH",
+      "usabilityScore": "4",
+      "complexityScore": "4",
+      "roiPotential": "10000.00",
+      "implementationTime": "1 mês",
+      "targetDepartments": "[\"RH\", \"Administração\"]"
+    },
+    {
+      "id": "40",
+      "adaptedTitle": "Aprovação de Compras Hospitalares",
+      "adaptedDescription": "Workflow de aprovação com integração ERP.",
+      "hospitalContext": "Compras",
+      "usabilityScore": "4",
+      "complexityScore": "3",
+      "roiPotential": "8000.00",
+      "implementationTime": "2 semanas",
+      "targetDepartments": "[\"Compras\", \"Financeiro\"]"
+    },
+    {
+      "id": "36",
+      "adaptedTitle": "Backup de Prontuários Eletrônicos",
+      "adaptedDescription": "Backup diário criptografado com retenção de 5 anos.",
+      "hospitalContext": "TI",
+      "usabilityScore": "4",
+      "complexityScore": "2",
+      "roiPotential": "5000.00",
+      "implementationTime": "1 semana",
+      "targetDepartments": "[\"TI\", \"Qualidade\"]"
+    },
+    {
+      "id": "37",
+      "adaptedTitle": "Notificações de Tarefas Críticas",
+      "adaptedDescription": "Notifica equipe via Telegram para tarefas críticas.",
+      "hospitalContext": "Gestão",
+      "usabilityScore": "4",
+      "complexityScore": "2",
+      "roiPotential": "3000.00",
+      "implementationTime": "3 dias",
+      "targetDepartments": "[\"Administração\", \"TI\"]"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tadaptedTitle\tadaptedDescription\thospitalContext\tusabilityScore\tcomplexityScore\troiPotential\timplementationTime\ttargetDepartments\n35\tAnálise de Contratos Médicos com IA\tMulti-agente para extração, análise de riscos e sugestões.\tJurídico\t5\t5\t30000.00\t1 mês\t[\"Jurídico\", \"Compras\"]\n34\tAgente Virtual Hospitalar 24/7\tChatbot para dúvidas, agendamentos e escalação.\tCentral de Atendimento\t5\t3\t25000.00\t2 semanas\t[\"Atendimento\", \"TI\"]\n33\tIntegração WhatsApp + Prontuário\tConsulta prontuário e responde automaticamente ao paciente.\tAtendimento\t5\t4\t20000.00\t3 semanas\t[\"TI\", \"Atendimento\"]\n31\tBot de Triagem de Pacientes com IA\tSistema automatizado para triagem inicial de pacientes via WhatsApp. Coleta sintomas, classifica urgência e direciona para especialidade.\tEmergência\t5\t3\t15000.00\t2 semanas\t[\"Emergência\", \"Enfermagem\", \"TI\"]\n32\tAutomação de Relatórios de Ocupação\tGera relatórios diários de ocupação de leitos e previsão de demanda.\tGestão de Leitos\t5\t2\t8000.00\t1 semana\t[\"Administração\", \"UTI\"]\n38\tProcessamento de Laudos Médicos\tOCR + resumo IA + anexo ao prontuário.\tLaboratório\t4\t4\t12000.00\t3 semanas\t[\"Laboratório\", \"TI\"]\n39\tRecrutamento Hospitalar com IA\tAnálise de CVs, verificação CRM/COREN, agendamento.\tRH\t4\t4\t10000.00\t1 mês\t[\"RH\", \"Administração\"]\n40\tAprovação de Compras Hospitalares\tWorkflow de aprovação com integração ERP.\tCompras\t4\t3\t8000.00\t2 semanas\t[\"Compras\", \"Financeiro\"]\n36\tBackup de Prontuários Eletrônicos\tBackup diário criptografado com retenção de 5 anos.\tTI\t4\t2\t5000.00\t1 semana\t[\"TI\", \"Qualidade\"]\n37\tNotificações de Tarefas Críticas\tNotifica equipe via Telegram para tarefas críticas.\tGestão\t4\t2\t3000.00\t3 dias\t[\"Administração\", \"TI\"]\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

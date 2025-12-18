@@ -1,0 +1,1 @@
+ALTER TABLE `integrations` MODIFY COLUMN `type` enum('whatsapp','telegram','email','slack','discord','custom','social','ai','funnel','sales') NOT NULL;

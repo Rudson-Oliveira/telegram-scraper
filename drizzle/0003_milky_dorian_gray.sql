@@ -1,0 +1,1 @@
+ALTER TABLE `api_keys` MODIFY COLUMN `permissions` json;

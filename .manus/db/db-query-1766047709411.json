@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE telegram_channels \nSET isActive = TRUE \nWHERE channelName IN (\n  'INEMA.Automacao', 'INEMA.AGENTES', 'INEMA.N8N', \n  'INEMA.Prompts', 'INEMA.LLMs', 'INEMA.IA', \n  'INEMA.TOOLS', 'INEMA.VIP'\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute UPDATE telegram_channels \nSET isActive = TRUE \nWHERE channelName IN (\n  'INEMA.Automacao', 'INEMA.AGENTES', 'INEMA.N8N', \n  'INEMA.Prompts', 'INEMA.LLMs', 'INEMA.IA', \n  'INEMA.TOOLS', 'INEMA.VIP'\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 53
+}

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO telegram_credentials (userId, apiId, apiHash, phoneNumber, createdAt, updatedAt) \nSELECT u.id, '34460706', 'e9e3b0039f203a6af32eabf6aa58261e', '+5535998352323', NOW(), NOW()\nFROM users u WHERE u.openId = (SELECT openId FROM users ORDER BY lastSignedIn DESC LIMIT 1)\nON DUPLICATE KEY UPDATE apiId = '34460706', apiHash = 'e9e3b0039f203a6af32eabf6aa58261e', phoneNumber = '+5535998352323', updatedAt = NOW();",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute INSERT INTO telegram_credentials (userId, apiId, apiHash, phoneNumber, createdAt, updatedAt) \nSELECT u.id, '34460706', 'e9e3b0039f203a6af32eabf6aa58261e', '+5535998352323', NOW(), NOW()\nFROM users u WHERE u.openId = (SELECT openId FROM users ORDER BY lastSignedIn DESC LIMIT 1)\nON DUPLICATE KEY UPDATE apiId = '34460706', apiHash = 'e9e3b0039f203a6af32eabf6aa58261e', phoneNumber = '+5535998352323', updatedAt = NOW();",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 149
+}

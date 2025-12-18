@@ -1,0 +1,15 @@
+{
+  "query": "SELECT \n  (SELECT COUNT(*) FROM telegram_channels WHERE isActive = 1) as canais_ativos,\n  (SELECT COUNT(*) FROM integrations WHERE type = 'ai') as agentes_ia,\n  (SELECT COUNT(*) FROM telegram_messages) as mensagens_total;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT \n  (SELECT COUNT(*) FROM telegram_channels WHERE isActive = 1) as canais_ativos,\n  (SELECT COUNT(*) FROM integrations WHERE type = 'ai') as agentes_ia,\n  (SELECT COUNT(*) FROM telegram_messages) as mensagens_total;",
+  "rows": [
+    {
+      "canais_ativos": "28",
+      "agentes_ia": "5",
+      "mensagens_total": "58"
+    }
+  ],
+  "messages": [],
+  "stdout": "canais_ativos\tagentes_ia\tmensagens_total\n28\t5\t58\n",
+  "stderr": "",
+  "execution_time_ms": 71
+}

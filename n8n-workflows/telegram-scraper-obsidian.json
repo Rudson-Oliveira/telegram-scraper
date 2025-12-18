@@ -1,0 +1,167 @@
+{
+  "name": "Telegram Scraper - Sincronização Obsidian",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Agendamento (6h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$env.TELEGRAM_SCRAPER_URL}}/api/webhooks/messages",
+        "authentication": "none",
+        "options": {}
+      },
+      "id": "http-get-all",
+      "name": "Buscar Mensagens",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agrupar mensagens por categoria e preparar para Obsidian\nconst items = $input.all();\nconst grouped = {\n  prompts: [],\n  automacoes: [],\n  ferramentas: [],\n  links: [],\n  outros: []\n};\n\nfor (const item of items) {\n  const content = item.json.content || '';\n  const contentType = item.json.contentType || 'text';\n  const channelName = item.json.channelName || 'Desconhecido';\n  const createdAt = item.json.createdAt || new Date().toISOString();\n  \n  // Categorizar\n  const contentLower = content.toLowerCase();\n  let category = 'outros';\n  \n  if (contentType === 'prompt' || contentLower.includes('prompt') || contentLower.includes('gpt') || contentLower.includes('claude')) {\n    category = 'prompts';\n  } else if (contentLower.includes('n8n') || contentLower.includes('make') || contentLower.includes('workflow') || contentLower.includes('automação')) {\n    category = 'automacoes';\n  } else if (contentLower.includes('ferramenta') || contentLower.includes('tool') || contentLower.includes('app') || contentLower.includes('site')) {\n    category = 'ferramentas';\n  } else if (content.includes('http://') || content.includes('https://')) {\n    category = 'links';\n  }\n  \n  grouped[category].push({\n    content,\n    channel: channelName,\n    date: createdAt.split('T')[0],\n    type: contentType\n  });\n}\n\n// Gerar arquivos Markdown para cada categoria\nconst output = [];\nconst today = new Date().toISOString().split('T')[0];\n\nfor (const [category, messages] of Object.entries(grouped)) {\n  if (messages.length === 0) continue;\n  \n  let markdown = `---\\ntitle: \"INEMA ${category.charAt(0).toUpperCase() + category.slice(1)} - ${today}\"\\ndate: ${today}\\ntags:\\n  - inema\\n  - ${category}\\n  - telegram-scraper\\n---\\n\\n# INEMA ${category.charAt(0).toUpperCase() + category.slice(1)}\\n\\n> Coletado automaticamente em ${today}\\n\\n---\\n\\n`;\n  \n  for (const msg of messages) {\n    markdown += `## De: ${msg.channel}\\n\\n${msg.content}\\n\\n---\\n\\n`;\n  }\n  \n  output.push({\n    json: {\n      category,\n      filename: `INEMA-${category}-${today}.md`,\n      folder: `INEMA/${category}`,\n      content: markdown,\n      count: messages.length\n    }\n  });\n}\n\nreturn output;"
+      },
+      "id": "process-group",
+      "name": "Agrupar por Categoria",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://localhost:27123/vault/{{ $json.folder }}/{{ $json.filename }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "text/markdown",
+        "body": "={{ $json.content }}",
+        "options": {}
+      },
+      "id": "obsidian-save",
+      "name": "Salvar no Obsidian",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "obsidian-api",
+          "name": "Obsidian Local REST API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Telegram Scraper → Obsidian\\n\\n### Pré-requisitos:\\n1. Instale o plugin **Local REST API** no Obsidian\\n2. Configure a porta (padrão: 27123)\\n3. Gere uma API Key no plugin\\n4. Configure as credenciais no N8N:\\n   - Tipo: Header Auth\\n   - Header Name: Authorization\\n   - Header Value: Bearer YOUR_API_KEY\\n\\n### Estrutura de pastas criada:\\n```\\nINEMA/\\n├── prompts/\\n├── automacoes/\\n├── ferramentas/\\n├── links/\\n└── outros/\\n```\\n\\n### Variáveis de ambiente:\\n- `TELEGRAM_SCRAPER_URL`: URL do seu Telegram Scraper",
+        "height": 420,
+        "width": 340
+      },
+      "id": "sticky-note",
+      "name": "Instruções Obsidian",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 480]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "=Sincronizado {{ $json.count }} itens de {{ $json.category }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-status",
+      "name": "Status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Agendamento (6h)": {
+      "main": [
+        [
+          {
+            "node": "Buscar Mensagens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Mensagens": {
+      "main": [
+        [
+          {
+            "node": "Agrupar por Categoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrupar por Categoria": {
+      "main": [
+        [
+          {
+            "node": "Salvar no Obsidian",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar no Obsidian": {
+      "main": [
+        [
+          {
+            "node": "Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "telegram",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    },
+    {
+      "name": "obsidian",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    },
+    {
+      "name": "inema",
+      "createdAt": "2024-12-17T00:00:00.000Z",
+      "updatedAt": "2024-12-17T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2024-12-17T00:00:00.000Z",
+  "versionId": "1"
+}

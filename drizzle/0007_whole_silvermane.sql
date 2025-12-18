@@ -1,0 +1,1 @@
+ALTER TABLE `telegram_messages` MODIFY COLUMN `aiClassification` enum('prompt','ferramenta','tutorial','noticia','discussao','recurso','codigo','imagem_ia','video_ia','audio_ia','workflow','healthcare','outro');

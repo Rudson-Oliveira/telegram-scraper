@@ -1,0 +1,34 @@
+{
+  "query": "SELECT * FROM adapted_content WHERE adaptedTitle LIKE '%Contratos%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT * FROM adapted_content WHERE adaptedTitle LIKE '%Contratos%';",
+  "rows": [
+    {
+      "id": "35",
+      "messageId": "5",
+      "userId": "1",
+      "originalContent": "Multi-agente contratos",
+      "adaptedTitle": "Análise de Contratos Médicos com IA",
+      "adaptedDescription": "Multi-agente para extração, análise de riscos e sugestões.",
+      "hospitalContext": "Jurídico",
+      "usabilityScore": "5",
+      "complexityScore": "5",
+      "roiPotential": "30000.00",
+      "implementationTime": "1 mês",
+      "requiredResources": "[\"Claude 3.5\", \"CrewAI\"]",
+      "adaptedWorkflow": "{\"agents\":[\"extrator\",\"analista\",\"consultor\"]}",
+      "adaptedCode": "NULL",
+      "targetDepartments": "[\"Jurídico\", \"Compras\"]",
+      "complianceNotes": "Processamento local.",
+      "lgpdCompliant": "1",
+      "cfmCompliant": "1",
+      "adaptationStatus": "completed",
+      "adaptedAt": "2025-12-18 08:56:29",
+      "createdAt": "2025-12-18 08:56:29",
+      "updatedAt": "2025-12-18 08:56:29"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tmessageId\tuserId\toriginalContent\tadaptedTitle\tadaptedDescription\thospitalContext\tusabilityScore\tcomplexityScore\troiPotential\timplementationTime\trequiredResources\tadaptedWorkflow\tadaptedCode\ttargetDepartments\tcomplianceNotes\tlgpdCompliant\tcfmCompliant\tadaptationStatus\tadaptedAt\tcreatedAt\tupdatedAt\n35\t5\t1\tMulti-agente contratos\tAnálise de Contratos Médicos com IA\tMulti-agente para extração, análise de riscos e sugestões.\tJurídico\t5\t5\t30000.00\t1 mês\t[\"Claude 3.5\", \"CrewAI\"]\t{\"agents\":[\"extrator\",\"analista\",\"consultor\"]}\tNULL\t[\"Jurídico\", \"Compras\"]\tProcessamento local.\t1\t1\tcompleted\t2025-12-18 08:56:29\t2025-12-18 08:56:29\t2025-12-18 08:56:29\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

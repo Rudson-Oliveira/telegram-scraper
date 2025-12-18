@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, content FROM telegram_messages WHERE aiClassification IN ('prompt', 'codigo', 'ferramenta') ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT id, content FROM telegram_messages WHERE aiClassification IN ('prompt', 'codigo', 'ferramenta') ORDER BY id DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "30048",
+      "content": "Workflow de aprovação: Documento enviado → Análise automática → Notifica aprovador → Registra decisão → Arquiva."
+    },
+    {
+      "id": "30047",
+      "content": "Sistema multi-agente para RH: Agente 1 analisa currículos, Agente 2 faz triagem inicial, Agente 3 agenda entrevistas."
+    },
+    {
+      "id": "30046",
+      "content": "Prompt para geração de código: Crie uma API REST em Python/FastAPI para gerenciar tarefas. Inclua CRUD completo, autenticação JWT e documentação Swagger."
+    },
+    {
+      "id": "30044",
+      "content": "Compartilhando: Minha automação de onboarding de clientes. Reduz trabalho manual de 2h para 5 minutos."
+    },
+    {
+      "id": "30040",
+      "content": "Testes automatizados com IA: Use GPT para gerar casos de teste a partir do código. Cobertura 80% em minutos."
+    },
+    {
+      "id": "30039",
+      "content": "Docker compose para dev: Template com PostgreSQL, Redis e Node.js. Ambiente de desenvolvimento em 1 comando."
+    },
+    {
+      "id": "30038",
+      "content": "API rate limiting: Implemente com Redis para proteger seus endpoints. Código exemplo em Node.js disponível."
+    },
+    {
+      "id": "30037",
+      "content": "Cursor + Claude: Combo perfeito para desenvolvimento. Claude entende contexto do projeto inteiro."
+    },
+    {
+      "id": "30034",
+      "content": "Automação de social media: Posta automaticamente em Instagram, LinkedIn e Twitter. Agenda uma semana de conteúdo em 10 minutos."
+    },
+    {
+      "id": "30032",
+      "content": "Integração Make + Airtable: Sincronize leads do Facebook Ads automaticamente. Atualiza em tempo real."
+    },
+    {
+      "id": "30031",
+      "content": "Cenário Make: Quando email chega com anexo PDF, extrai texto com OCR, resume com GPT e salva no Google Drive."
+    },
+    {
+      "id": "30030",
+      "content": "Flowise: Alternativa open-source ao Dify. Rode localmente e mantenha controle total dos seus dados."
+    },
+    {
+      "id": "30029",
+      "content": "Dify.ai: Plataforma no-code para criar aplicações de IA. RAG, agentes e workflows em uma interface visual."
+    },
+    {
+      "id": "30028",
+      "content": "Gamma.app: Crie apresentações profissionais em minutos usando IA. Ideal para pitches e relatórios."
+    },
+    {
+      "id": "30027",
+      "content": "Zapier Central: Novo produto que cria automações usando linguagem natural. Diga o que quer e ele monta o workflow."
+    },
+    {
+      "id": "30026",
+      "content": "Notion AI: Agora com capacidade de criar bancos de dados automaticamente a partir de texto. Produtividade 10x."
+    },
+    {
+      "id": "30025",
+      "content": "Prompt master: Crie um plano de negócios completo para [EMPRESA] no setor de [SETOR]. Inclua análise SWOT, projeções financeiras e estratégia de marketing."
+    },
+    {
+      "id": "30024",
+      "content": "Ferramenta da semana: Make.com - Alternativa ao Zapier com preços mais acessíveis e interface visual intuitiva."
+    },
+    {
+      "id": "30021",
+      "content": "Novidade: Cursor AI agora com modo agente. Cria projetos completos a partir de descrição em linguagem natural."
+    },
+    {
+      "id": "30020",
+      "content": "Prompt para análise de sentimento: Analise o texto abaixo e classifique o sentimento em: Positivo, Negativo ou Neutro. Justifique sua resposta."
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcontent\n30048\tWorkflow de aprovação: Documento enviado → Análise automática → Notifica aprovador → Registra decisão → Arquiva.\n30047\tSistema multi-agente para RH: Agente 1 analisa currículos, Agente 2 faz triagem inicial, Agente 3 agenda entrevistas.\n30046\tPrompt para geração de código: Crie uma API REST em Python/FastAPI para gerenciar tarefas. Inclua CRUD completo, autenticação JWT e documentação Swagger.\n30044\tCompartilhando: Minha automação de onboarding de clientes. Reduz trabalho manual de 2h para 5 minutos.\n30040\tTestes automatizados com IA: Use GPT para gerar casos de teste a partir do código. Cobertura 80% em minutos.\n30039\tDocker compose para dev: Template com PostgreSQL, Redis e Node.js. Ambiente de desenvolvimento em 1 comando.\n30038\tAPI rate limiting: Implemente com Redis para proteger seus endpoints. Código exemplo em Node.js disponível.\n30037\tCursor + Claude: Combo perfeito para desenvolvimento. Claude entende contexto do projeto inteiro.\n30034\tAutomação de social media: Posta automaticamente em Instagram, LinkedIn e Twitter. Agenda uma semana de conteúdo em 10 minutos.\n30032\tIntegração Make + Airtable: Sincronize leads do Facebook Ads automaticamente. Atualiza em tempo real.\n30031\tCenário Make: Quando email chega com anexo PDF, extrai texto com OCR, resume com GPT e salva no Google Drive.\n30030\tFlowise: Alternativa open-source ao Dify. Rode localmente e mantenha controle total dos seus dados.\n30029\tDify.ai: Plataforma no-code para criar aplicações de IA. RAG, agentes e workflows em uma interface visual.\n30028\tGamma.app: Crie apresentações profissionais em minutos usando IA. Ideal para pitches e relatórios.\n30027\tZapier Central: Novo produto que cria automações usando linguagem natural. Diga o que quer e ele monta o workflow.\n30026\tNotion AI: Agora com capacidade de criar bancos de dados automaticamente a partir de texto. Produtividade 10x.\n30025\tPrompt master: Crie um plano de negócios completo para [EMPRESA] no setor de [SETOR]. Inclua análise SWOT, projeções financeiras e estratégia de marketing.\n30024\tFerramenta da semana: Make.com - Alternativa ao Zapier com preços mais acessíveis e interface visual intuitiva.\n30021\tNovidade: Cursor AI agora com modo agente. Cria projetos completos a partir de descrição em linguagem natural.\n30020\tPrompt para análise de sentimento: Analise o texto abaixo e classifique o sentimento em: Positivo, Negativo ou Neutro. Justifique sua resposta.\n",
+  "stderr": "",
+  "execution_time_ms": 119
+}

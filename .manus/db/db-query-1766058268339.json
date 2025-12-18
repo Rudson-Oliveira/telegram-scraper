@@ -1,0 +1,15 @@
+{
+  "query": "SELECT userId, COUNT(*) as total, SUM(isActive) as active FROM telegram_channels GROUP BY userId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT userId, COUNT(*) as total, SUM(isActive) as active FROM telegram_channels GROUP BY userId;",
+  "rows": [
+    {
+      "userId": "1",
+      "total": "53",
+      "active": "53"
+    }
+  ],
+  "messages": [],
+  "stdout": "userId\ttotal\tactive\n1\t53\t53\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

@@ -1,0 +1,183 @@
+{
+  "name": "Telegram Scraper - Prompts para Notion",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-prompts",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Novo Prompt",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "telegram-prompts"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isPrompt }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "filter-prompts",
+      "name": "Filtrar Prompts",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "value": "SEU_DATABASE_ID_AQUI",
+          "mode": "id"
+        },
+        "title": "={{ $json.summary || $json.content.substring(0, 100) }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Categoria",
+              "select": "={{ $json.classification }}"
+            },
+            {
+              "key": "Tags",
+              "multiSelect": "={{ $json.tags }}"
+            },
+            {
+              "key": "Relevância",
+              "number": "={{ $json.relevanceScore }}"
+            },
+            {
+              "key": "Confiança",
+              "number": "={{ $json.confidence }}"
+            },
+            {
+              "key": "Canal",
+              "richText": "={{ $json.channelName }}"
+            },
+            {
+              "key": "Data",
+              "date": "={{ $json.messageDate }}"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "paragraph",
+              "richText": "={{ $json.content }}"
+            }
+          ]
+        }
+      },
+      "id": "notion-create",
+      "name": "Criar Página no Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [690, 200],
+      "credentials": {
+        "notionApi": {
+          "id": "SEU_CREDENTIAL_ID",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, notionPageId: $json.id }) }}"
+      },
+      "id": "response-success",
+      "name": "Resposta Sucesso",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [910, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, reason: 'Not a prompt' }) }}"
+      },
+      "id": "response-skip",
+      "name": "Resposta Skip",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [690, 400]
+    }
+  ],
+  "connections": {
+    "Webhook - Novo Prompt": {
+      "main": [
+        [
+          {
+            "node": "Filtrar Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Prompts": {
+      "main": [
+        [
+          {
+            "node": "Criar Página no Notion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resposta Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Página no Notion": {
+      "main": [
+        [
+          {
+            "node": "Resposta Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateId": "telegram-scraper-prompts-notion"
+  },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 0,
+  "tags": [
+    {
+      "name": "Telegram",
+      "id": "telegram"
+    },
+    {
+      "name": "Notion",
+      "id": "notion"
+    },
+    {
+      "name": "Automação",
+      "id": "automacao"
+    }
+  ]
+}

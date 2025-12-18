@@ -1,0 +1,154 @@
+{
+  "query": "SELECT id, channelName, channelType, isActive FROM telegram_channels ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT id, channelName, channelType, isActive FROM telegram_channels ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "channelName": "INEMA.IA",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "2",
+      "channelName": "INEMA.LLMs",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "3",
+      "channelName": "INEMA.AGENTES",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "4",
+      "channelName": "INEMA.MUSICAL",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "5",
+      "channelName": "INEMA.MKT",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "6",
+      "channelName": "INEMA.Educ",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "7",
+      "channelName": "RUDSON PROMPT",
+      "channelType": "group",
+      "isActive": "1"
+    },
+    {
+      "id": "8",
+      "channelName": "INEMA.VIP",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "9",
+      "channelName": "INEMA.FTD",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "10",
+      "channelName": "AUTOMACAO RUDSON",
+      "channelType": "group",
+      "isActive": "1"
+    },
+    {
+      "id": "11",
+      "channelName": "INEMA.DEV",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "12",
+      "channelName": "INEMA.INFRA",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "13",
+      "channelName": "INEMA.TOOLS",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "14",
+      "channelName": "Rudson ESOTERISMO",
+      "channelType": "group",
+      "isActive": "1"
+    },
+    {
+      "id": "15",
+      "channelName": "INEMA.N8N",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "16",
+      "channelName": "INEMA.IMAGENS",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "17",
+      "channelName": "INEMA.AVATARES",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "18",
+      "channelName": "INEMA.CPA",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "19",
+      "channelName": "INEMA.TIA",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "20",
+      "channelName": "INEMA.ADULTO",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "21",
+      "channelName": "INEMA.Make",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "22",
+      "channelName": "INEMA.VISION",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "23",
+      "channelName": "INEMA.Discussao",
+      "channelType": "supergroup",
+      "isActive": "1"
+    },
+    {
+      "id": "24",
+      "channelName": "ESTUDOS RUDSON",
+      "channelType": "group",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tchannelName\tchannelType\tisActive\n1\tINEMA.IA\tsupergroup\t1\n2\tINEMA.LLMs\tsupergroup\t1\n3\tINEMA.AGENTES\tsupergroup\t1\n4\tINEMA.MUSICAL\tsupergroup\t1\n5\tINEMA.MKT\tsupergroup\t1\n6\tINEMA.Educ\tsupergroup\t1\n7\tRUDSON PROMPT\tgroup\t1\n8\tINEMA.VIP\tsupergroup\t1\n9\tINEMA.FTD\tsupergroup\t1\n10\tAUTOMACAO RUDSON\tgroup\t1\n11\tINEMA.DEV\tsupergroup\t1\n12\tINEMA.INFRA\tsupergroup\t1\n13\tINEMA.TOOLS\tsupergroup\t1\n14\tRudson ESOTERISMO\tgroup\t1\n15\tINEMA.N8N\tsupergroup\t1\n16\tINEMA.IMAGENS\tsupergroup\t1\n17\tINEMA.AVATARES\tsupergroup\t1\n18\tINEMA.CPA\tsupergroup\t1\n19\tINEMA.TIA\tsupergroup\t1\n20\tINEMA.ADULTO\tsupergroup\t1\n21\tINEMA.Make\tsupergroup\t1\n22\tINEMA.VISION\tsupergroup\t1\n23\tINEMA.Discussao\tsupergroup\t1\n24\tESTUDOS RUDSON\tgroup\t1\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

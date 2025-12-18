@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, name, openId FROM users LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT id, name, openId FROM users LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Rudson Oliveira",
+      "openId": "7sFAK62A28sgomA6uCy9kL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\topenId\n1\tRudson Oliveira\t7sFAK62A28sgomA6uCy9kL\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

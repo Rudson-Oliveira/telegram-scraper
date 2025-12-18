@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM telegram_messages WHERE Field = 'messageType';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SHOW COLUMNS FROM telegram_messages WHERE Field = 'messageType';",
+  "rows": [
+    {
+      "Field": "messageType",
+      "Type": "enum('text','image','video','document','audio','prompt','other')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "text",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nmessageType\tenum('text','image','video','document','audio','prompt','other')\tNO\t\ttext\t\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

@@ -1,0 +1,162 @@
+{
+  "name": "Telegram Scraper - Tutoriais para Obsidian",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-tutoriais",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Novo Tutorial",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "telegram-tutoriais"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.classification }}",
+              "operation": "equals",
+              "value2": "tutorial"
+            }
+          ]
+        }
+      },
+      "id": "filter-tutoriais",
+      "name": "Filtrar Tutoriais",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Formatar conteúdo para Obsidian Markdown\nconst item = items[0].json;\n\nconst date = new Date().toISOString().split('T')[0];\nconst tags = item.tags || [];\nconst tagsStr = tags.map(t => `#${t.replace(/\\s+/g, '-')}`).join(' ');\n\nconst markdown = `---\ntitle: ${item.summary || 'Tutorial sem título'}\ndate: ${date}\ncategory: tutorial\nrelevance: ${item.relevanceScore || 0}\nconfidence: ${item.confidence || 0}\nchannel: ${item.channelName || 'Unknown'}\ntags: [${tags.map(t => `\"${t}\"`).join(', ')}]\n---\n\n# ${item.summary || 'Tutorial'}\n\n${tagsStr}\n\n## Conteúdo Original\n\n${item.content}\n\n## Metadados\n\n- **Canal**: ${item.channelName || 'N/A'}\n- **Data**: ${item.messageDate || date}\n- **Relevância Healthcare**: ${item.relevanceScore || 0}/5\n- **Confiança IA**: ${item.confidence || 0}%\n`;\n\nconst filename = `Tutorial-${date}-${Date.now()}.md`;\n\nreturn [{ json: { markdown, filename, ...item } }];"
+      },
+      "id": "format-markdown",
+      "name": "Formatar Markdown",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [690, 200]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.filename }}",
+        "fileContent": "={{ $json.markdown }}",
+        "options": {
+          "append": false
+        }
+      },
+      "id": "write-file",
+      "name": "Salvar Arquivo",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [910, 200],
+      "notes": "Configure o caminho do vault Obsidian"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, filename: $json.filename }) }}"
+      },
+      "id": "response-success",
+      "name": "Resposta Sucesso",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1130, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, reason: 'Not a tutorial' }) }}"
+      },
+      "id": "response-skip",
+      "name": "Resposta Skip",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [690, 400]
+    }
+  ],
+  "connections": {
+    "Webhook - Novo Tutorial": {
+      "main": [
+        [
+          {
+            "node": "Filtrar Tutoriais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Tutoriais": {
+      "main": [
+        [
+          {
+            "node": "Formatar Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Resposta Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Markdown": {
+      "main": [
+        [
+          {
+            "node": "Salvar Arquivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salvar Arquivo": {
+      "main": [
+        [
+          {
+            "node": "Resposta Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateId": "telegram-scraper-tutoriais-obsidian"
+  },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "triggerCount": 0,
+  "tags": [
+    {
+      "name": "Telegram",
+      "id": "telegram"
+    },
+    {
+      "name": "Obsidian",
+      "id": "obsidian"
+    },
+    {
+      "name": "Automação",
+      "id": "automacao"
+    }
+  ]
+}

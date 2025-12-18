@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, channelId, content, senderName, createdAt FROM telegram_messages ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 46yA7HaDwBP5MYq.0cfa392d87a6 --database FgFuwHSp9rkJkcaPADwYhA --execute SELECT id, channelId, content, senderName, createdAt FROM telegram_messages ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "10",
+      "channelId": "10",
+      "content": "Onde encontro? - Pergunta sobre localização de recurso no INEMA.Discussao",
+      "senderName": "Ricardo",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "9",
+      "channelId": "9",
+      "content": "Verdade - Confirmação de informação no Bate-Papo XUUCOMX",
+      "senderName": "Alessandro",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "8",
+      "channelId": "8",
+      "content": "Sensacional Parabéns aos Peritos - Reconhecimento da comunidade Sherlocks",
+      "senderName": "Leonardo",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "7",
+      "channelId": "7",
+      "content": "Oie! Tem alguma ferramenta completa de bot para whats? - Pergunta sobre ferramentas de automação",
+      "senderName": "Stefens",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "6",
+      "channelId": "6",
+      "content": "Hugginsface Agente Operador https://t.me/c/2463916523/1745 - Ferramenta de IA para agentes",
+      "senderName": "Rudson",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "5",
+      "channelId": "5",
+      "content": "Um novo hack usando o Gemini AI permite criar aplicativos no-code com base em vídeos - PROMPT INCRÍVEL",
+      "senderName": "Rudson",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "4",
+      "channelId": "4",
+      "content": "Conseguiu no n8n ou na vps - Discussão sobre implementação de automação",
+      "senderName": "D",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "3",
+      "channelId": "3",
+      "content": "Automação_com_IA_em_2026_Do_Hype_à_Realidade_Estratégica.pptx - Apresentação completa",
+      "senderName": "INEMA",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "2",
+      "channelId": "2",
+      "content": "no grupo do INEMA.CCODE - Novidades e dicas de uso da comunidade VIP",
+      "senderName": "INEMA",
+      "createdAt": "2025-12-17 04:32:26"
+    },
+    {
+      "id": "1",
+      "channelId": "1",
+      "content": "scripts_praticos.sql - Arquivo SQL com scripts práticos para DBA Oracle Fundamentos",
+      "senderName": "INEMA",
+      "createdAt": "2025-12-17 04:32:26"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tchannelId\tcontent\tsenderName\tcreatedAt\n10\t10\tOnde encontro? - Pergunta sobre localização de recurso no INEMA.Discussao\tRicardo\t2025-12-17 04:32:26\n9\t9\tVerdade - Confirmação de informação no Bate-Papo XUUCOMX\tAlessandro\t2025-12-17 04:32:26\n8\t8\tSensacional Parabéns aos Peritos - Reconhecimento da comunidade Sherlocks\tLeonardo\t2025-12-17 04:32:26\n7\t7\tOie! Tem alguma ferramenta completa de bot para whats? - Pergunta sobre ferramentas de automação\tStefens\t2025-12-17 04:32:26\n6\t6\tHugginsface Agente Operador https://t.me/c/2463916523/1745 - Ferramenta de IA para agentes\tRudson\t2025-12-17 04:32:26\n5\t5\tUm novo hack usando o Gemini AI permite criar aplicativos no-code com base em vídeos - PROMPT INCRÍVEL\tRudson\t2025-12-17 04:32:26\n4\t4\tConseguiu no n8n ou na vps - Discussão sobre implementação de automação\tD\t2025-12-17 04:32:26\n3\t3\tAutomação_com_IA_em_2026_Do_Hype_à_Realidade_Estratégica.pptx - Apresentação completa\tINEMA\t2025-12-17 04:32:26\n2\t2\tno grupo do INEMA.CCODE - Novidades e dicas de uso da comunidade VIP\tINEMA\t2025-12-17 04:32:26\n1\t1\tscripts_praticos.sql - Arquivo SQL com scripts práticos para DBA Oracle Fundamentos\tINEMA\t2025-12-17 04:32:26\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
