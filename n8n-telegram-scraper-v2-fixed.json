@@ -1,0 +1,501 @@
+{
+  "name": "Telegram Scraper V2 - Production (FIXED)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger-node",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "notes": "Executa a cada 6 horas - Ajuste conforme necessário"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.TELEGRAM_PROXY_URL || 'http://localhost:3000' }}/scrape-telegram",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.TELEGRAM_PROXY_TOKEN || 'change-me' }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"channels\": {{ JSON.stringify(($env.TELEGRAM_CHANNELS || 'aicommunitybr,chatgptbrasil').split(',').map(c => c.trim())) }},\n  \"limit\": {{ $env.MESSAGES_PER_CHANNEL || 100 }}\n}",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": false,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "telegram-scraper-api-node",
+      "name": "Telegram Scraper API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300],
+      "notes": "Chama microserviço proxy para raspar Telegram\nConfigura TELEGRAM_PROXY_URL e TELEGRAM_PROXY_TOKEN\nTimeout: 2 minutos"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// ========================================\n// EXTRATOR DE MENSAGENS\n// Extrai mensagens da resposta da API\n// ========================================\n\nconst response = $input.first().json;\n\n// Validar resposta\nif (!response || !response.success) {\n  const errorMsg = response?.error || response?.message || 'Unknown error from API';\n  console.error('API Error:', errorMsg);\n  \n  return {\n    error: true,\n    message: errorMsg,\n    stats: { total_messages: 0 },\n    messages: []\n  };\n}\n\n// Extrair mensagens\nconst messages = response.data?.messages || [];\nconst stats = response.data?.stats || {};\n\nconsole.log(`✓ Received ${messages.length} messages from API`);\nconsole.log(`  Total channels: ${stats.total_channels || 0}`);\nconsole.log(`  Total prompts: ${stats.total_prompts || 0}`);\n\nif (messages.length === 0) {\n  console.warn('⚠️  No messages returned from API');\n  return {\n    error: false,\n    message: 'No messages found',\n    stats: stats,\n    messages: []\n  };\n}\n\n// Retornar mensagens individuais para processar no Split In Batches\nreturn messages.map(msg => ({\n  json: msg\n}));"
+      },
+      "id": "extract-messages-node",
+      "name": "Extract Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300],
+      "notes": "Extrai mensagens da resposta da API do microserviço\nValida resposta e trata erros"
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "id": "split-batches-node",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [850, 300],
+      "notes": "Processa mensagens em lotes de 10 para evitar sobrecarga de API"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ========================================\n// CLASSIFICADOR IA NODE\n// Usa Gemini API para classificar mensagens\n// ========================================\n\nconst item = $input.item.json;\nconst GEMINI_API_KEY = $env.GEMINI_API_KEY || '';\nconst GEMINI_MODEL = 'gemini-2.0-flash-exp';\n\nif (!GEMINI_API_KEY) {\n  throw new Error('GEMINI_API_KEY não configurado!');\n}\n\nasync function classifyMessage(message) {\n  const prompt = `Você é um classificador de mensagens de canais do Telegram focados em IA e tecnologia.\n\nAnalise a seguinte mensagem e classifique-a em uma das categorias:\n- prompt: Prompts para modelos de IA, exemplos de prompting\n- tutorial: Tutoriais, guias passo a passo, instruções\n- ferramenta: Apresentação de ferramentas, APIs, softwares\n- discussão: Discussões, opiniões, debates\n- outro: Qualquer outra coisa\n\nMensagem:\n---\n${message.content}\n---\n\nCanal: ${message.channel}\n\nResponda APENAS em formato JSON com a seguinte estrutura:\n{\n  \"category\": \"uma das categorias acima\",\n  \"confidence\": número entre 0 e 1,\n  \"reasoning\": \"breve explicação da classificação\"\n}`;\n\n  const response = await fetch(\n    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,\n    {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({\n        contents: [{\n          parts: [{ text: prompt }]\n        }]\n      })\n    }\n  );\n\n  if (!response.ok) {\n    const errorText = await response.text();\n    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);\n  }\n\n  const data = await response.json();\n  const text = data.candidates[0].content.parts[0].text;\n  \n  // Extrair JSON da resposta\n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (!jsonMatch) {\n    throw new Error('Failed to parse JSON response from Gemini');\n  }\n  \n  return JSON.parse(jsonMatch[0]);\n}\n\n// Executar classificação com retry\nasync function executeWithRetry(fn, maxRetries = 3, baseDelay = 1000) {\n  for (let attempt = 1; attempt <= maxRetries; attempt++) {\n    try {\n      return await fn();\n    } catch (error) {\n      console.error(`Classificação - Tentativa ${attempt}/${maxRetries} falhou:`, error.message);\n      \n      // Verificar rate limiting\n      if (error.message.includes('429') || error.message.includes('quota')) {\n        const delay = baseDelay * Math.pow(2, attempt - 1) * 2; // Dobrar delay para rate limiting\n        console.log(`Rate limit detectado. Aguardando ${delay}ms...`);\n        await new Promise(resolve => setTimeout(resolve, delay));\n        continue;\n      }\n      \n      if (attempt === maxRetries) {\n        throw error;\n      }\n      \n      const delay = baseDelay * Math.pow(2, attempt - 1);\n      await new Promise(resolve => setTimeout(resolve, delay));\n    }\n  }\n}\n\ntry {\n  console.log(`Classificando mensagem: ${item.id}`);\n  const classification = await executeWithRetry(() => classifyMessage(item), 3, 2000);\n  \n  return {\n    ...item,\n    classification: classification.category,\n    classification_confidence: classification.confidence,\n    classification_reasoning: classification.reasoning,\n    classified_at: new Date().toISOString()\n  };\n} catch (error) {\n  console.error('Erro ao classificar mensagem:', error.message);\n  return {\n    ...item,\n    classification: 'outro',\n    classification_confidence: 0,\n    classification_reasoning: `Erro: ${error.message}`,\n    classification_error: true\n  };\n}"
+      },
+      "id": "classifier-node",
+      "name": "Classificador IA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 300],
+      "notes": "Classifica mensagens usando Gemini 2.0 Flash\nCategorias: prompt/tutorial/ferramenta/discussão/outro\nInclui retry com backoff exponencial e rate limiting"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ========================================\n// ANÁLISE DE SENTIMENTO NODE\n// Identifica urgência e sentimento\n// ========================================\n\nconst item = $input.item.json;\nconst GEMINI_API_KEY = $env.GEMINI_API_KEY || '';\nconst GEMINI_MODEL = 'gemini-2.0-flash-exp';\n\nif (!GEMINI_API_KEY) {\n  throw new Error('GEMINI_API_KEY não configurado!');\n}\n\nasync function analyzeSentiment(message) {\n  const prompt = `Você é um analisador de sentimento e urgência para mensagens de canais do Telegram sobre IA e tecnologia.\n\nAnalise a seguinte mensagem e determine:\n1. Score de urgência (0-10): Quão urgente/importante é esta mensagem?\n   - 0-2: Informação casual, não urgente\n   - 3-5: Informação relevante, importância média\n   - 6-8: Informação importante, requer atenção\n   - 9-10: Crítico, requer ação imediata\n\n2. Sentimento geral:\n   - positivo: Notícias boas, oportunidades, celebrações\n   - neutro: Informações factuais, tutoriais\n   - negativo: Problemas, críticas, avisos\n   - urgente: Requer ação imediata\n   - informativo: Compartilhamento de conhecimento\n\n3. Prioridade: baixa, média, alta, crítica\n\n4. Palavras-chave que indicam urgência/importância\n\nMensagem:\n---\n${message.content}\n---\n\nCanal: ${message.channel}\nClassificação: ${message.classification || 'N/A'}\n\nContexto adicional:\n- Mensagens com datas limite = alta urgência\n- Anúncios de ferramentas novas = alta relevância\n- Tutoriais = média prioridade, informativo\n- Discussões gerais = baixa prioridade\n\nResponda APENAS em formato JSON:\n{\n  \"urgency_score\": número de 0 a 10,\n  \"sentiment\": \"positivo/neutro/negativo/urgente/informativo\",\n  \"priority\": \"baixa/média/alta/crítica\",\n  \"reasoning\": \"breve explicação\",\n  \"keywords\": [\"palavra1\", \"palavra2\"]\n}`;\n\n  const response = await fetch(\n    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,\n    {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({\n        contents: [{\n          parts: [{ text: prompt }]\n        }]\n      })\n    }\n  );\n\n  if (!response.ok) {\n    const errorText = await response.text();\n    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);\n  }\n\n  const data = await response.json();\n  const text = data.candidates[0].content.parts[0].text;\n  \n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (!jsonMatch) {\n    throw new Error('Failed to parse JSON response from Gemini');\n  }\n  \n  const analysis = JSON.parse(jsonMatch[0]);\n  \n  // Validar urgency_score\n  analysis.urgency_score = Math.max(0, Math.min(10, analysis.urgency_score));\n  \n  return analysis;\n}\n\nasync function executeWithRetry(fn, maxRetries = 3, baseDelay = 1000) {\n  for (let attempt = 1; attempt <= maxRetries; attempt++) {\n    try {\n      return await fn();\n    } catch (error) {\n      console.error(`Sentimento - Tentativa ${attempt}/${maxRetries} falhou:`, error.message);\n      \n      if (error.message.includes('429') || error.message.includes('quota')) {\n        const delay = baseDelay * Math.pow(2, attempt - 1) * 2;\n        console.log(`Rate limit detectado. Aguardando ${delay}ms...`);\n        await new Promise(resolve => setTimeout(resolve, delay));\n        continue;\n      }\n      \n      if (attempt === maxRetries) {\n        throw error;\n      }\n      \n      const delay = baseDelay * Math.pow(2, attempt - 1);\n      await new Promise(resolve => setTimeout(resolve, delay));\n    }\n  }\n}\n\ntry {\n  console.log(`Analisando sentimento: ${item.id}`);\n  const sentiment = await executeWithRetry(() => analyzeSentiment(item), 3, 2000);\n  \n  return {\n    ...item,\n    urgency_score: sentiment.urgency_score,\n    sentiment: sentiment.sentiment,\n    priority: sentiment.priority,\n    sentiment_reasoning: sentiment.reasoning,\n    sentiment_keywords: sentiment.keywords,\n    sentiment_analyzed_at: new Date().toISOString()\n  };\n} catch (error) {\n  console.error('Erro ao analisar sentimento:', error.message);\n  return {\n    ...item,\n    urgency_score: 5,\n    sentiment: 'neutro',\n    priority: 'média',\n    sentiment_reasoning: `Erro: ${error.message}`,\n    sentiment_error: true\n  };\n}"
+      },
+      "id": "sentiment-node",
+      "name": "Análise de Sentimento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "notes": "Analisa urgência (0-10), sentimento e prioridade\nIdentifica palavras-chave importantes\nInclui retry e rate limiting"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ========================================\n// EXTRATOR DE CONTEÚDO NODE\n// Resumir mensagens longas (>500 chars)\n// ========================================\n\nconst item = $input.item.json;\nconst GEMINI_API_KEY = $env.GEMINI_API_KEY || '';\nconst GEMINI_MODEL = 'gemini-2.0-flash-exp';\nconst MIN_LENGTH = 500;\n\nif (!GEMINI_API_KEY) {\n  throw new Error('GEMINI_API_KEY não configurado!');\n}\n\n// Verificar se a mensagem precisa de resumo\nif (!item.content || item.content.length < MIN_LENGTH) {\n  console.log(`Mensagem ${item.id} não precisa de resumo (${item.content?.length || 0} chars)`);\n  return {\n    ...item,\n    summary: item.content?.substring(0, 200) || '',\n    key_points: [],\n    word_count: item.content?.split(/\\s+/).length || 0,\n    needs_summary: false\n  };\n}\n\nasync function extractContent(message) {\n  const prompt = `Você é um especialista em resumir conteúdo técnico sobre IA e tecnologia.\n\nAnalise a seguinte mensagem do Telegram e crie:\n1. Um resumo conciso de 2-3 frases\n2. Lista de 3-5 pontos-chave mais importantes\n\nMensagem:\n---\n${message.content}\n---\n\nCanal: ${message.channel}\n\nResponda APENAS em formato JSON:\n{\n  \"summary\": \"resumo de 2-3 frases aqui\",\n  \"keyPoints\": [\"ponto 1\", \"ponto 2\", \"ponto 3\"],\n  \"wordCount\": número de palavras do texto original\n}`;\n\n  const response = await fetch(\n    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,\n    {\n      method: 'POST',\n      headers: { 'Content-Type': 'application/json' },\n      body: JSON.stringify({\n        contents: [{\n          parts: [{ text: prompt }]\n        }]\n      })\n    }\n  );\n\n  if (!response.ok) {\n    const errorText = await response.text();\n    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);\n  }\n\n  const data = await response.json();\n  const text = data.candidates[0].content.parts[0].text;\n  \n  const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);\n  if (!jsonMatch) {\n    throw new Error('Failed to parse JSON response from Gemini');\n  }\n  \n  return JSON.parse(jsonMatch[0]);\n}\n\nasync function executeWithRetry(fn, maxRetries = 3, baseDelay = 1000) {\n  for (let attempt = 1; attempt <= maxRetries; attempt++) {\n    try {\n      return await fn();\n    } catch (error) {\n      console.error(`Extração - Tentativa ${attempt}/${maxRetries} falhou:`, error.message);\n      \n      if (error.message.includes('429') || error.message.includes('quota')) {\n        const delay = baseDelay * Math.pow(2, attempt - 1) * 2;\n        console.log(`Rate limit detectado. Aguardando ${delay}ms...`);\n        await new Promise(resolve => setTimeout(resolve, delay));\n        continue;\n      }\n      \n      if (attempt === maxRetries) {\n        throw error;\n      }\n      \n      const delay = baseDelay * Math.pow(2, attempt - 1);\n      await new Promise(resolve => setTimeout(resolve, delay));\n    }\n  }\n}\n\ntry {\n  console.log(`Extraindo conteúdo: ${item.id} (${item.content.length} chars)`);\n  const extraction = await executeWithRetry(() => extractContent(item), 3, 2000);\n  \n  return {\n    ...item,\n    summary: extraction.summary,\n    key_points: extraction.keyPoints,\n    word_count: extraction.wordCount,\n    needs_summary: true,\n    summarized_at: new Date().toISOString()\n  };\n} catch (error) {\n  console.error('Erro ao extrair conteúdo:', error.message);\n  return {\n    ...item,\n    summary: item.content.substring(0, 200) + '...',\n    key_points: [],\n    word_count: item.content.split(/\\s+/).length,\n    extraction_error: true\n  };\n}"
+      },
+      "id": "extractor-node",
+      "name": "Extrator de Conteúdo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 300],
+      "notes": "Resume mensagens longas (>500 chars)\nExtrai pontos-chave\nConta palavras"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "tableId": "messages",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "telegram_id",
+              "fieldValue": "={{ $json.telegram_id }}"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $json.content }}"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "={{ $json.channel }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $json.date }}"
+            },
+            {
+              "fieldId": "sender_id",
+              "fieldValue": "={{ $json.sender_id }}"
+            },
+            {
+              "fieldId": "sender_name",
+              "fieldValue": "={{ $json.sender_name }}"
+            },
+            {
+              "fieldId": "message_type",
+              "fieldValue": "={{ $json.message_type }}"
+            },
+            {
+              "fieldId": "has_media",
+              "fieldValue": "={{ $json.has_media }}"
+            },
+            {
+              "fieldId": "is_prompt",
+              "fieldValue": "={{ $json.is_prompt }}"
+            },
+            {
+              "fieldId": "views",
+              "fieldValue": "={{ $json.views }}"
+            },
+            {
+              "fieldId": "forwards",
+              "fieldValue": "={{ $json.forwards }}"
+            },
+            {
+              "fieldId": "classification",
+              "fieldValue": "={{ $json.classification }}"
+            },
+            {
+              "fieldId": "classification_confidence",
+              "fieldValue": "={{ $json.classification_confidence }}"
+            },
+            {
+              "fieldId": "classification_reasoning",
+              "fieldValue": "={{ $json.classification_reasoning }}"
+            },
+            {
+              "fieldId": "urgency_score",
+              "fieldValue": "={{ $json.urgency_score }}"
+            },
+            {
+              "fieldId": "sentiment",
+              "fieldValue": "={{ $json.sentiment }}"
+            },
+            {
+              "fieldId": "priority",
+              "fieldValue": "={{ $json.priority }}"
+            },
+            {
+              "fieldId": "sentiment_reasoning",
+              "fieldValue": "={{ $json.sentiment_reasoning }}"
+            },
+            {
+              "fieldId": "sentiment_keywords",
+              "fieldValue": "={{ JSON.stringify($json.sentiment_keywords) }}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{ $json.summary }}"
+            },
+            {
+              "fieldId": "key_points",
+              "fieldValue": "={{ JSON.stringify($json.key_points) }}"
+            },
+            {
+              "fieldId": "word_count",
+              "fieldValue": "={{ $json.word_count }}"
+            },
+            {
+              "fieldId": "scraped_at",
+              "fieldValue": "={{ $json.scraped_at }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now.toISOString() }}"
+            }
+          ]
+        },
+        "options": {
+          "onConflict": "merge-duplicates"
+        }
+      },
+      "id": "supabase-save-node",
+      "name": "Supabase - Salvar Dados",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1650, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-credentials",
+          "name": "Supabase Educacional"
+        }
+      },
+      "notes": "Salva mensagens no Supabase\nUsa UPSERT para evitar duplicatas\nAtualiza mensagens existentes"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "combineOperation": "any"
+          },
+          "conditions": [
+            {
+              "id": "condition-error",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "condition-classification-error",
+              "leftValue": "={{ $json.classification_error }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "condition-sentiment-error",
+              "leftValue": "={{ $json.sentiment_error }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-check-errors-node",
+      "name": "IF - Verificar Erros",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1850, 300],
+      "notes": "Verifica se houve erros durante o processamento\nRoteia para notificação de erro ou sucesso"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.WEBHOOK_NOTIFICATION_URL || 'https://webhook.site/your-webhook-url' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"error\",\n  \"workflow\": \"Telegram Scraper V2\",\n  \"timestamp\": \"{{ $now.toISOString() }}\",\n  \"error_count\": {{ $input.all().filter(item => item.json.error || item.json.classification_error || item.json.sentiment_error).length }},\n  \"total_processed\": {{ $input.all().length }},\n  \"errors\": {{ JSON.stringify($input.all().filter(item => item.json.error || item.json.classification_error || item.json.sentiment_error).map(item => ({\n    id: item.json.id,\n    message: item.json.classification_reasoning || item.json.sentiment_reasoning || item.json.message || 'Unknown error'\n  }))) }}\n}",
+        "options": {}
+      },
+      "id": "webhook-error-notification-node",
+      "name": "Webhook - Notificação de Erro",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2050, 200],
+      "notes": "Envia notificação de erro via webhook\nConfigure WEBHOOK_NOTIFICATION_URL nas variáveis de ambiente"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.WEBHOOK_NOTIFICATION_URL || 'https://webhook.site/your-webhook-url' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"success\",\n  \"workflow\": \"Telegram Scraper V2\",\n  \"timestamp\": \"{{ $now.toISOString() }}\",\n  \"total_processed\": {{ $input.all().length }},\n  \"stats\": {\n    \"total_messages\": {{ $input.all().length }},\n    \"classifications\": {\n      \"prompt\": {{ $input.all().filter(item => item.json.classification === 'prompt').length }},\n      \"tutorial\": {{ $input.all().filter(item => item.json.classification === 'tutorial').length }},\n      \"ferramenta\": {{ $input.all().filter(item => item.json.classification === 'ferramenta').length }},\n      \"discussão\": {{ $input.all().filter(item => item.json.classification === 'discussão').length }},\n      \"outro\": {{ $input.all().filter(item => item.json.classification === 'outro').length }}\n    },\n    \"priorities\": {\n      \"crítica\": {{ $input.all().filter(item => item.json.priority === 'crítica').length }},\n      \"alta\": {{ $input.all().filter(item => item.json.priority === 'alta').length }},\n      \"média\": {{ $input.all().filter(item => item.json.priority === 'média').length }},\n      \"baixa\": {{ $input.all().filter(item => item.json.priority === 'baixa').length }}\n    },\n    \"avg_urgency\": {{ $input.all().reduce((sum, item) => sum + (item.json.urgency_score || 0), 0) / $input.all().length }}\n  }\n}",
+        "options": {}
+      },
+      "id": "webhook-success-notification-node",
+      "name": "Webhook - Notificação de Sucesso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2050, 400],
+      "notes": "Envia notificação de sucesso com estatísticas\nInclui contagem de categorias e prioridades"
+    },
+    {
+      "parameters": {
+        "errorWorkflow": "",
+        "workflow": "Telegram Scraper V2 - Production (FIXED)"
+      },
+      "id": "error-trigger-node",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [250, 500],
+      "notes": "Captura todos os erros não tratados do workflow"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.WEBHOOK_NOTIFICATION_URL || 'https://webhook.site/your-webhook-url' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"critical_error\",\n  \"workflow\": \"Telegram Scraper V2\",\n  \"timestamp\": \"{{ $now.toISOString() }}\",\n  \"error\": {\n    \"message\": \"{{ $json.error.message }}\",\n    \"node\": \"{{ $json.error.node.name }}\",\n    \"stack\": \"{{ $json.error.stack }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "webhook-critical-error-node",
+      "name": "Webhook - Erro Crítico",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 500],
+      "notes": "Envia notificação de erro crítico quando workflow falha completamente"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Telegram Scraper API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Scraper API": {
+      "main": [
+        [
+          {
+            "node": "Extract Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Messages": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Classificador IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classificador IA": {
+      "main": [
+        [
+          {
+            "node": "Análise de Sentimento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Análise de Sentimento": {
+      "main": [
+        [
+          {
+            "node": "Extrator de Conteúdo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extrator de Conteúdo": {
+      "main": [
+        [
+          {
+            "node": "Supabase - Salvar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase - Salvar Dados": {
+      "main": [
+        [
+          {
+            "node": "IF - Verificar Erros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Verificar Erros": {
+      "main": [
+        [
+          {
+            "node": "Webhook - Notificação de Erro",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Webhook - Notificação de Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Webhook - Erro Crítico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-12-18T00:00:00.000Z",
+      "updatedAt": "2025-12-18T00:00:00.000Z",
+      "id": "telegram-scraper",
+      "name": "Telegram Scraper"
+    },
+    {
+      "createdAt": "2025-12-18T00:00:00.000Z",
+      "updatedAt": "2025-12-18T00:00:00.000Z",
+      "id": "production",
+      "name": "Production"
+    },
+    {
+      "createdAt": "2025-12-18T00:00:00.000Z",
+      "updatedAt": "2025-12-18T00:00:00.000Z",
+      "id": "ai-automation",
+      "name": "AI Automation"
+    },
+    {
+      "createdAt": "2025-12-18T00:00:00.000Z",
+      "updatedAt": "2025-12-18T00:00:00.000Z",
+      "id": "fixed",
+      "name": "Fixed"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-12-18T00:00:00.000Z",
+  "versionId": "2"
+}

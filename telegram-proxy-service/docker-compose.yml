@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  telegram-proxy:
+    build: .
+    container_name: telegram-proxy-service
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_PHONE=${TELEGRAM_PHONE}
+      - TELEGRAM_SESSION=${TELEGRAM_SESSION}
+      - TELEGRAM_PASSWORD=${TELEGRAM_PASSWORD}
+      - API_TOKEN=${API_TOKEN}
+    env_file:
+      - .env
+    volumes:
+      # Persistir sessão do Telegram
+      - telegram-session:/app/.telegram
+    networks:
+      - telegram-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  telegram-session:
+    driver: local
+
+networks:
+  telegram-network:
+    driver: bridge
