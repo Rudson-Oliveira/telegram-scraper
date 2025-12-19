@@ -20,11 +20,17 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
 
-// Rate limiter: máximo 10 requisições por minuto
+// Rate limiter: máximo 30 requisições por minuto (mais flexível)
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minuto
-  max: 10,
-  message: { error: 'Too many requests, please try again later' }
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { 
+    error: 'Too many requests', 
+    message: 'Rate limit exceeded. Please try again later.',
+    retryAfter: '60 seconds'
+  }
 });
 
 app.use('/scrape-telegram', limiter);
@@ -149,7 +155,12 @@ async function initTelegramClient() {
         if (process.env.TELEGRAM_CODE) {
           return process.env.TELEGRAM_CODE;
         }
+        // Se estamos em produção e não temos código, lançar erro
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error('TELEGRAM_CODE is required in production mode. Please configure TELEGRAM_SESSION to avoid this.');
+        }
         // Fallback para input manual (apenas desenvolvimento)
+        console.log('⚠️  WARNING: Using interactive input - not suitable for production');
         return await input.text('Enter code: ');
       },
       onError: (err) => {
@@ -160,9 +171,15 @@ async function initTelegramClient() {
 
     // Salvar sessão
     const newSessionString = telegramClient.session.save();
-    if (newSessionString !== SESSION_STRING) {
-      console.log('⚠️  NEW SESSION STRING - Save this to TELEGRAM_SESSION:');
-      console.log(newSessionString);
+    if (newSessionString && newSessionString !== SESSION_STRING) {
+      console.log('\n' + '='.repeat(70));
+      console.log('⚠️  NEW SESSION STRING GENERATED');
+      console.log('='.repeat(70));
+      console.log('IMPORTANT: Save this to your .env file as TELEGRAM_SESSION:');
+      console.log('\nTELEGRAM_SESSION=' + newSessionString);
+      console.log('\n' + '='.repeat(70));
+      console.log('After saving, restart the service to use the persistent session.');
+      console.log('='.repeat(70) + '\n');
     }
 
     console.log('✓ Telegram client connected');
@@ -338,32 +355,52 @@ app.post('/scrape-telegram', authenticate, async (req, res) => {
       });
     }
     
-    console.log(`\n[${new Date().toISOString()}] Scraping request:`);
-    console.log(`- Channels: ${channels.join(', ')}`);
-    console.log(`- Limit: ${limit}`);
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    console.log(`\n[${new Date().toISOString()}] [${requestId}] Scraping request:`);
+    console.log(`[${requestId}] - Channels: ${channels.join(', ')}`);
+    console.log(`[${requestId}] - Limit: ${limit}`);
     
     // Executar scraping
     const result = await scrapeMultipleChannels(channels, limit);
     
-    console.log(`✓ Scraping completed: ${result.stats.total_messages} messages`);
+    const processingTime = Date.now() - req.startTime;
+    console.log(`[${requestId}] ✓ Scraping completed: ${result.stats.total_messages} messages in ${processingTime}ms`);
     
     res.json({
       success: true,
       data: result,
       meta: {
+        request_id: requestId,
         request_time: new Date().toISOString(),
-        processing_time_ms: Date.now() - req.startTime
+        processing_time_ms: processingTime
       }
     });
     
   } catch (error) {
-    console.error('Scraping error:', error);
+    console.error(`[${requestId || 'unknown'}] Scraping error:`, error);
     
-    res.status(500).json({
+    // Determinar status code baseado no tipo de erro
+    let statusCode = 500;
+    let errorType = 'Internal Server Error';
+    
+    if (error.message.includes('TELEGRAM_SESSION') || error.message.includes('TELEGRAM_CODE')) {
+      statusCode = 503;
+      errorType = 'Service Unavailable';
+    } else if (error.message.includes('Unauthorized') || error.message.includes('AUTH_KEY')) {
+      statusCode = 401;
+      errorType = 'Unauthorized';
+    } else if (error.message.includes('timeout') || error.message.includes('TIMEOUT')) {
+      statusCode = 504;
+      errorType = 'Gateway Timeout';
+    }
+    
+    res.status(statusCode).json({
       success: false,
-      error: 'Internal Server Error',
+      error: errorType,
       message: error.message,
-      timestamp: new Date().toISOString()
+      request_id: requestId || 'unknown',
+      timestamp: new Date().toISOString(),
+      hint: statusCode === 503 ? 'Check TELEGRAM_SESSION configuration and ensure Telegram client is authenticated' : undefined
     });
   }
 });
@@ -381,9 +418,22 @@ app.get('/test', (req, res) => {
   });
 });
 
-// Middleware de timing
+// Middleware de timing (deve vir ANTES das rotas)
 app.use((req, res, next) => {
   req.startTime = Date.now();
+  next();
+});
+
+// Middleware de CORS (opcional, mas recomendado)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-API-Token');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
   next();
 });
 
